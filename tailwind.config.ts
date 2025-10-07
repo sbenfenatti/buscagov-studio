@@ -12,6 +12,7 @@ export default {
       backgroundImage: {
         'hero-image': "url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=2070&auto=format&fit=crop')",
         'parliament-image': "url('https://i.imgur.com/0SgT90S.jpeg')",
+        'camara-background-image': "url('https://i.imgur.com/K0b2Q9T.jpeg')",
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
