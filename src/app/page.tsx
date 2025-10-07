@@ -9,39 +9,41 @@ import Link from 'next/link';
 function Header() {
   return (
     <header className="absolute top-0 left-0 w-full z-20">
-      <nav className="container mx-auto px-6 py-4 flex justify-between items-center bg-black/20 backdrop-blur-md rounded-b-lg border-b border-white/10">
-        <div className="flex items-center">
-          <svg
-            className="h-8 w-8 text-white mr-3"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="1.5"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3.75 21h16.5M4.5 3h15M5.25 3v18M9.75 3v18M14.25 3v18M18.75 3v18M3.75 9h16.5"
-            />
-          </svg>
-          <h1 className="text-2xl font-bold text-white">Dados Abertos</h1>
-        </div>
-        <div className="hidden md:flex items-center space-x-6">
-          <a
-            href="#home"
-            className="text-white hover:text-blue-300 transition-colors"
-          >
-            Início
-          </a>
-          <a
-            href="#parliament"
-            className="text-white hover:text-blue-300 transition-colors"
-          >
-            O Parlamento
-          </a>
-        </div>
-      </nav>
+      <div className="bg-black/20 backdrop-blur-md border-b border-white/10">
+        <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center">
+            <svg
+              className="h-8 w-8 text-white mr-3"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="1.5"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 21h16.5M4.5 3h15M5.25 3v18M9.75 3v18M14.25 3v18M18.75 3v18M3.75 9h16.5"
+              />
+            </svg>
+            <h1 className="text-2xl font-bold text-white">Dados Abertos</h1>
+          </div>
+          <div className="hidden md:flex items-center space-x-6">
+            <a
+              href="#home"
+              className="text-white hover:text-blue-300 transition-colors"
+            >
+              Início
+            </a>
+            <a
+              href="#parliament"
+              className="text-white hover:text-blue-300 transition-colors"
+            >
+              O Parlamento
+            </a>
+          </div>
+        </nav>
+      </div>
     </header>
   );
 }
