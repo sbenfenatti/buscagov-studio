@@ -3,14 +3,77 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import React, { useState, useEffect } from 'react';
+
+type Deputado = {
+  id: number;
+  nome: string;
+  siglaPartido: string;
+  siglaUf: string;
+  urlFoto: string;
+};
+
+async function getDeputados() {
+  try {
+    const response = await fetch('https://dadosabertos.camara.leg.br/api/v2/deputados?ordem=ASC&ordenarPor=nome');
+    if (!response.ok) {
+      throw new Error('Failed to fetch deputados');
+    }
+    const data = await response.json();
+    return data.dados;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+function DeputadoCard({ deputado }: { deputado: Deputado }) {
+  return (
+    <Card className="flex flex-col overflow-hidden transition-transform transform hover:-translate-y-1 hover:shadow-2xl">
+      <CardHeader className="p-0">
+         <div className="relative w-full h-48">
+            <Image
+                src={deputado.urlFoto}
+                alt={`Foto do deputado ${deputado.nome}`}
+                fill
+                style={{ objectFit: 'cover' }}
+                className="bg-gray-200"
+            />
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 flex-grow">
+        <CardTitle className="text-lg font-bold">{deputado.nome}</CardTitle>
+      </CardContent>
+      <CardFooter className="p-4 pt-0 flex justify-between items-center">
+        <Badge variant="secondary">{deputado.siglaPartido}</Badge>
+        <span className="text-sm font-medium text-gray-500">{deputado.siglaUf}</span>
+      </CardFooter>
+    </Card>
+  );
+}
 
 export default function CamaraPage() {
+  const [deputados, setDeputados] = useState<Deputado[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      const data = await getDeputados();
+      setDeputados(data);
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
+
   return (
     <div className="relative w-full min-h-screen overflow-hidden">
        <div className="absolute inset-0 bg-camara-background-image bg-cover bg-center" />
       <div className="absolute inset-0 bg-black/70" />
       <header className="relative z-10 bg-transparent">
-        <div className="bg-black/20 backdrop-blur-md border-b border-white/10">
+        <div className="bg-black/20 backdrop-blur-md">
           <div className="container mx-auto px-6 py-4 flex items-center">
             <Link href="/">
               <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white">
@@ -35,15 +98,15 @@ export default function CamaraPage() {
         </div>
       </header>
       <main className="relative z-10 container mx-auto px-6 py-8 text-white">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Em Construção
-          </h2>
-          <p className="text-gray-300">
-            Esta página está sendo desenvolvida. Em breve, você poderá explorar
-            os dados da Câmara dos Deputados aqui.
-          </p>
-        </div>
+        {loading ? (
+            <div className="text-center text-white">Carregando deputados...</div>
+        ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                {deputados.map((deputado) => (
+                    <DeputadoCard key={deputado.id} deputado={deputado} />
+                ))}
+            </div>
+        )}
       </main>
     </div>
   );
