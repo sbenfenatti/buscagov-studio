@@ -34,7 +34,7 @@ function DeputadoCard({ deputado }: { deputado: Deputado }) {
   return (
     <Card className="flex flex-col overflow-hidden transition-transform transform hover:-translate-y-1 hover:shadow-2xl bg-white/10 border-white/20 text-white">
       <CardHeader className="p-0">
-         <div className="relative w-full h-40">
+         <div className="relative w-full h-32">
             <Image
                 src={deputado.urlFoto}
                 alt={`Foto do deputado ${deputado.nome}`}
@@ -44,12 +44,12 @@ function DeputadoCard({ deputado }: { deputado: Deputado }) {
             />
         </div>
       </CardHeader>
-      <CardContent className="p-3 flex-grow">
-        <CardTitle className="text-base font-bold">{deputado.nome}</CardTitle>
+      <CardContent className="p-2 flex-grow">
+        <CardTitle className="text-sm font-bold">{deputado.nome}</CardTitle>
       </CardContent>
-      <CardFooter className="p-3 pt-0 flex justify-between items-center">
-        <Badge variant="secondary" className="bg-blue-200/30 text-blue-100">{deputado.siglaPartido}</Badge>
-        <span className="text-sm font-medium text-gray-300">{deputado.siglaUf}</span>
+      <CardFooter className="p-2 pt-0 flex justify-between items-center">
+        <Badge variant="secondary" className="bg-blue-200/30 text-blue-100 text-xs">{deputado.siglaPartido}</Badge>
+        <span className="text-xs font-medium text-gray-300">{deputado.siglaUf}</span>
       </CardFooter>
     </Card>
   );
@@ -59,10 +59,10 @@ export default async function DeputadosPage() {
   const deputados = await getDeputados();
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden">
+    <div className="relative w-full min-h-screen overflow-auto">
        <div className="absolute inset-0 bg-camara-background-image bg-cover bg-center" />
       <div className="absolute inset-0 bg-black/70" />
-      <header className="relative z-10 bg-transparent">
+      <header className="sticky top-0 z-20 bg-transparent">
         <div className="bg-black/20 backdrop-blur-md">
           <div className="container mx-auto px-6 py-4 flex items-center justify-between">
              <div className="flex items-center">
@@ -98,7 +98,7 @@ export default async function DeputadosPage() {
         {deputados.length === 0 ? (
             <div className="text-center text-white">Carregando deputados ou nenhum foi encontrado...</div>
         ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
                 {deputados.map((deputado) => (
                     <DeputadoCard key={deputado.id} deputado={deputado} />
                 ))}
