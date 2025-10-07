@@ -89,22 +89,3 @@
     overflow: hidden;
   }
 }
-
-@layer utilities {
-  @keyframes zoom-in {
-    from {
-      background-size: 100%;
-    }
-    to {
-      background-size: 120%;
-    }
-  }
-  @keyframes zoom-out {
-    from {
-      transform: scale(1.2);
-    }
-    to {
-      transform: scale(1);
-    }
-  }
-}

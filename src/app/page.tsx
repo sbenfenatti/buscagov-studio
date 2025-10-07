@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Search, ArrowDownCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -94,8 +93,6 @@ const parliamentQuestions = [
 
 function ParliamentSection() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [isZooming, setIsZooming] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -105,23 +102,11 @@ function ParliamentSection() {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
-  
-  const handleCamaraClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    setIsZooming(true);
-    setTimeout(() => {
-      router.push('/camara');
-    }, 700); // Duração da animação
-  };
 
   return (
     <section
       id="parliament"
-      className={cn(
-        "section bg-parliament-image bg-cover bg-center flex items-center justify-center transition-all duration-700",
-        isZooming ? 'animate-zoom-in' : ''
-      )}
-      style={{backgroundSize: isZooming ? '120%' : 'cover'}}
+      className="section bg-parliament-image bg-cover bg-center flex items-center justify-center"
     >
       <div className="absolute inset-0 bg-black/60"></div>
       <div className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto">
@@ -159,9 +144,8 @@ function ParliamentSection() {
               Senado Federal
             </span>
           </a>
-          <a
+          <Link
             href="/camara"
-            onClick={handleCamaraClick}
             className="flex flex-col items-center text-white hover:text-blue-300 transition-all duration-300 transform hover:scale-110"
           >
             <svg
@@ -176,7 +160,7 @@ function ParliamentSection() {
             <span className="mt-2 font-semibold tracking-wide">
               Câmara dos Deputados
             </span>
-          </a>
+          </Link>
         </div>
       </div>
     </section>
