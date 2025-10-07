@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, ArrowDownCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -104,13 +103,8 @@ function ParliamentSection() {
   return (
     <section
       id="parliament"
-      className="section flex items-center justify-center"
+      className="section flex items-center justify-center parliament-section"
     >
-      <img
-        src="https://i.imgur.com/0SgT90S.jpeg"
-        alt="Congresso Nacional à noite"
-        className="absolute inset-0 w-full h-full object-cover -z-10"
-      />
       <div className="absolute inset-0 bg-black/60"></div>
       <div className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto">
         <h2 className="text-4xl md:text-5xl font-bold mb-4">
@@ -177,11 +171,6 @@ export default function Home() {
     body.style.scrollSnapType = 'y mandatory';
     body.style.overflowY = 'scroll';
     body.style.height = '100vh';
-
-    const sections = document.querySelectorAll('.section');
-    sections.forEach((section) => {
-      (section as HTMLElement).style.scrollSnapAlign = 'start';
-    });
 
     return () => {
       document.documentElement.style.scrollBehavior = 'auto';
