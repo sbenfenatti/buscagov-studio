@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Search, ArrowDownCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -10,7 +11,7 @@ function Header() {
   return (
     <header className="absolute top-0 left-0 w-full z-20">
       <div className="bg-black/20 backdrop-blur-md border-b border-white/10">
-        <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center">
             <svg
               className="h-8 w-8 text-white mr-3"
@@ -42,7 +43,7 @@ function Header() {
               O Parlamento
             </a>
           </div>
-        </nav>
+        </div>
       </div>
     </header>
   );
@@ -93,6 +94,8 @@ const parliamentQuestions = [
 
 function ParliamentSection() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [isZooming, setIsZooming] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -102,11 +105,23 @@ function ParliamentSection() {
     }, 4000);
     return () => clearInterval(interval);
   }, []);
+  
+  const handleCamaraClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setIsZooming(true);
+    setTimeout(() => {
+      router.push('/camara');
+    }, 700); // Duração da animação
+  };
 
   return (
     <section
       id="parliament"
-      className="section bg-parliament-image bg-cover bg-center flex items-center justify-center"
+      className={cn(
+        "section bg-parliament-image bg-cover bg-center flex items-center justify-center transition-all duration-700",
+        isZooming ? 'animate-zoom-in' : ''
+      )}
+      style={{backgroundSize: isZooming ? '120%' : 'cover'}}
     >
       <div className="absolute inset-0 bg-black/60"></div>
       <div className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto">
@@ -144,8 +159,9 @@ function ParliamentSection() {
               Senado Federal
             </span>
           </a>
-          <Link
+          <a
             href="/camara"
+            onClick={handleCamaraClick}
             className="flex flex-col items-center text-white hover:text-blue-300 transition-all duration-300 transform hover:scale-110"
           >
             <svg
@@ -160,7 +176,7 @@ function ParliamentSection() {
             <span className="mt-2 font-semibold tracking-wide">
               Câmara dos Deputados
             </span>
-          </Link>
+          </a>
         </div>
       </div>
     </section>

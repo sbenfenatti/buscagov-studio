@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function CamaraPage() {
   return (
-    <div className="relative w-full min-h-screen bg-camara-background-image bg-cover bg-center">
+    <div className="relative w-full min-h-screen overflow-hidden">
+       <div className={cn("absolute inset-0 bg-camara-background-image bg-cover bg-center animate-zoom-out")} />
       <div className="absolute inset-0 bg-black/70" />
       <header className="relative z-10 bg-transparent">
         <div className="bg-black/20 backdrop-blur-md border-b border-white/10">
