@@ -1,76 +1,23 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import Image from 'next/image';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Users } from 'lucide-react';
 import React from 'react';
 
-type Deputado = {
-  id: number;
-  nome: string;
-  siglaPartido: string;
-  siglaUf: string;
-  urlFoto: string;
-};
-
-async function getDeputados(): Promise<Deputado[]> {
-  try {
-    const response = await fetch('https://dadosabertos.camara.leg.br/api/v2/deputados?ordem=ASC&ordenarPor=nome', { cache: 'no-store' });
-    if (!response.ok) {
-      console.error('Failed to fetch deputados:', response.statusText);
-      return [];
-    }
-    const data = await response.json();
-    return data.dados;
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-}
-
-function DeputadoCard({ deputado }: { deputado: Deputado }) {
-  return (
-    <Card className="flex flex-col overflow-hidden transition-transform transform hover:-translate-y-1 hover:shadow-2xl">
-      <CardHeader className="p-0">
-         <div className="relative w-full h-48">
-            <Image
-                src={deputado.urlFoto}
-                alt={`Foto do deputado ${deputado.nome}`}
-                fill
-                style={{ objectFit: 'cover' }}
-                className="bg-gray-200"
-            />
-        </div>
-      </CardHeader>
-      <CardContent className="p-4 flex-grow">
-        <CardTitle className="text-lg font-bold">{deputado.nome}</CardTitle>
-      </CardContent>
-      <CardFooter className="p-4 pt-0 flex justify-between items-center">
-        <Badge variant="secondary">{deputado.siglaPartido}</Badge>
-        <span className="text-sm font-medium text-gray-500">{deputado.siglaUf}</span>
-      </CardFooter>
-    </Card>
-  );
-}
-
-export default async function CamaraPage() {
-  const deputados = await getDeputados();
-
+export default function CamaraPage() {
   return (
     <div className="relative w-full min-h-screen overflow-hidden">
-       <div className="absolute inset-0 bg-camara-background-image bg-cover bg-center" />
+      <div className="absolute inset-0 bg-camara-background-image bg-cover bg-center" />
       <div className="absolute inset-0 bg-black/70" />
       <header className="relative z-10 bg-transparent">
         <div className="bg-black/20 backdrop-blur-md">
-          <div className="container mx-auto px-6 py-4 flex items-center">
-            <Link href="/">
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white">
-                <ArrowLeft />
-              </Button>
-            </Link>
-            <div className="flex items-center ml-4">
+          <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center">
+              <Link href="/">
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white mr-4">
+                  <ArrowLeft />
+                </Button>
+              </Link>
               <svg
                 className="h-10 w-10 text-blue-300"
                 viewBox="0 0 100 50"
@@ -80,23 +27,23 @@ export default async function CamaraPage() {
               >
                 <path d="M 10 10 Q 50 40 90 10" />
               </svg>
-              <h1 className="text-2xl font-bold text-white ml-3">
-                Câmara dos Deputados
-              </h1>
             </div>
+            <nav className="flex items-center space-x-4">
+              <Link href="/camara/deputados">
+                <Button variant="ghost" className="text-white hover:bg-white/10 hover:text-white">
+                  <Users className="mr-2 h-4 w-4" />
+                  Deputados
+                </Button>
+              </Link>
+            </nav>
           </div>
         </div>
       </header>
       <main className="relative z-10 container mx-auto px-6 py-8 text-white">
-        {deputados.length === 0 ? (
-            <div className="text-center text-white">Carregando deputados ou nenhum foi encontrado...</div>
-        ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                {deputados.map((deputado) => (
-                    <DeputadoCard key={deputado.id} deputado={deputado} />
-                ))}
-            </div>
-        )}
+         <div className="text-center mt-20">
+            <h1 className="text-4xl font-bold">Portal da Câmara dos Deputados</h1>
+            <p className="text-lg mt-4 text-gray-300">Selecione uma opção no menu acima para começar a explorar.</p>
+        </div>
       </main>
     </div>
   );
