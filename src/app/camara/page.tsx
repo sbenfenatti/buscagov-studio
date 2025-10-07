@@ -18,15 +18,17 @@ export default function CamaraPage() {
                   <ArrowLeft />
                 </Button>
               </Link>
-              <svg
-                className="h-10 w-10 text-blue-300"
-                viewBox="0 0 100 50"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="4"
-              >
-                <path d="M 10 10 Q 50 40 90 10" />
-              </svg>
+              <Link href="/camara">
+                <svg
+                    className="h-10 w-10 text-blue-300 cursor-pointer"
+                    viewBox="0 0 100 50"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                >
+                    <path d="M 10 10 Q 50 40 90 10" />
+                </svg>
+              </Link>
             </div>
             <nav className="flex items-center space-x-4">
               <Link href="/camara/deputados">
