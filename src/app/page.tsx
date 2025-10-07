@@ -131,7 +131,7 @@ function ParliamentSection() {
         </div>
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-16">
           <a
-            href="#"
+            href="senado.html"
             className="flex flex-col items-center text-white hover:text-blue-300 transition-all duration-300 transform hover:scale-110"
           >
             <svg
