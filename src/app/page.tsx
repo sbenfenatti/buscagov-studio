@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
 const questions = [
   'Qual deputado federal mais gastou com viagens em 2023?',
@@ -20,7 +23,7 @@ function HeroSection() {
   }, []);
 
   return (
-    <section className="relative flex h-screen w-full flex-col items-center justify-center bg-hero-image bg-cover bg-center text-center">
+    <section id="inicio" className="relative flex h-screen w-full flex-col items-center justify-center bg-hero-image bg-cover bg-center text-center">
       <div className="absolute inset-0 bg-gray-900/60" />
       <div className="relative z-10 mx-auto max-w-4xl px-4">
         <h1 className="text-4xl font-bold text-white md:text-6xl">
@@ -50,20 +53,41 @@ function HeroSection() {
 
 function ParliamentSection() {
   return (
-    <section className="relative flex h-screen w-full items-center justify-center bg-parliament-image bg-cover bg-center">
+    <section id="explorar" className="relative flex h-screen w-full items-center justify-center bg-parliament-image bg-cover bg-center">
        <div className="absolute inset-0 bg-gray-900/70" />
-       <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
+       <div className="relative z-10 w-full max-w-4xl mx-auto px-4 text-center">
         <h2 className="text-4xl font-bold text-white">Transparência ao seu alcance</h2>
         <p className="mt-4 text-lg text-gray-300">
           Explore dados, visualize tendências e entenda as decisões que moldam o nosso país.
           Comece a pesquisar agora.
         </p>
-         <div className="mt-8">
-            <input type="text" placeholder="Faça sua pergunta..." className="w-full max-w-lg p-3 rounded-md text-gray-800"/>
-        </div>
+         <form className="mt-8 flex w-full max-w-2xl mx-auto items-center space-x-2">
+            <Input 
+              type="text" 
+              placeholder="Faça sua pergunta sobre deputados, projetos de lei, votações..." 
+              className="flex-1 p-6 text-lg bg-gray-100/90 text-gray-800 placeholder:text-gray-500 border-transparent focus:border-blue-500 focus:ring-blue-500"
+            />
+            <Button type="submit" size="lg" className="p-6 bg-blue-600 hover:bg-blue-700">
+              <Search className="h-6 w-6" />
+              <span className="sr-only">Pesquisar</span>
+            </Button>
+        </form>
       </div>
     </section>
   )
+}
+
+function AboutSection() {
+  return (
+    <section id="sobre" className="bg-gray-800 py-20 text-white">
+      <div className="container mx-auto px-6 text-center">
+        <h2 className="text-4xl font-bold">Sobre o Projeto</h2>
+        <p className="mt-4 max-w-3xl mx-auto text-lg text-gray-300">
+          O ParlamentoBR é uma plataforma de código aberto que visa facilitar o acesso e a compreensão dos dados públicos do legislativo brasileiro. Utilizando inteligência artificial, transformamos dados brutos em informações claras e acessíveis para qualquer cidadão.
+        </p>
+      </div>
+    </section>
+  );
 }
 
 
@@ -74,14 +98,15 @@ export default function Home() {
         <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="text-xl font-bold text-white">ParlamentoBR</div>
           <div>
-            <a href="#inicio" className="text-gray-300 hover:text-white px-3">Início</a>
-            <a href="#explorar" className="text-gray-300 hover:text-white px-3">Explorar</a>
-            <a href="#sobre" className="text-gray-300 hover:text-white px-3">Sobre</a>
+            <a href="#inicio" className="text-gray-300 hover:text-white px-3 py-2 rounded-md transition-colors">Início</a>
+            <a href="#explorar" className="text-gray-300 hover:text-white px-3 py-2 rounded-md transition-colors">Explorar</a>
+            <a href="#sobre" className="text-gray-300 hover:text-white px-3 py-2 rounded-md transition-colors">Sobre</a>
           </div>
         </nav>
       </header>
       <HeroSection />
       <ParliamentSection />
+      <AboutSection />
     </main>
   );
 }
