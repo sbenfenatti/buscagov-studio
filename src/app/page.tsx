@@ -49,7 +49,7 @@ function HeroSection() {
   return (
     <section
       id="home"
-      className="section hero-section flex items-center justify-center"
+      className="section bg-hero-image bg-cover bg-center flex items-center justify-center"
     >
       <div className="absolute inset-0 bg-black/60"></div>
       <div className="relative z-10 text-center text-white px-6">
@@ -103,7 +103,7 @@ function ParliamentSection() {
   return (
     <section
       id="parliament"
-      className="section flex items-center justify-center parliament-section"
+      className="section bg-parliament-image bg-cover bg-center flex items-center justify-center"
     >
       <div className="absolute inset-0 bg-black/60"></div>
       <div className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto">
@@ -125,7 +125,7 @@ function ParliamentSection() {
         </div>
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-16">
           <a
-            href="senado.html"
+            href="#"
             className="flex flex-col items-center text-white hover:text-blue-300 transition-all duration-300 transform hover:scale-110"
           >
             <svg
