@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search, ArrowDownCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 function Header() {
   return (
@@ -125,7 +126,7 @@ function ParliamentSection() {
         </div>
         <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-16">
           <a
-            href="#"
+            href="senado.html"
             className="flex flex-col items-center text-white hover:text-blue-300 transition-all duration-300 transform hover:scale-110"
           >
             <svg
@@ -141,8 +142,8 @@ function ParliamentSection() {
               Senado Federal
             </span>
           </a>
-          <a
-            href="#"
+          <Link
+            href="/camara"
             className="flex flex-col items-center text-white hover:text-blue-300 transition-all duration-300 transform hover:scale-110"
           >
             <svg
@@ -157,7 +158,7 @@ function ParliamentSection() {
             <span className="mt-2 font-semibold tracking-wide">
               Câmara dos Deputados
             </span>
-          </a>
+          </Link>
         </div>
       </div>
     </section>
