@@ -1,4 +1,3 @@
-'use client';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 type Deputado = {
   id: number;
@@ -16,11 +15,12 @@ type Deputado = {
   urlFoto: string;
 };
 
-async function getDeputados() {
+async function getDeputados(): Promise<Deputado[]> {
   try {
-    const response = await fetch('https://dadosabertos.camara.leg.br/api/v2/deputados?ordem=ASC&ordenarPor=nome');
+    const response = await fetch('https://dadosabertos.camara.leg.br/api/v2/deputados?ordem=ASC&ordenarPor=nome', { cache: 'no-store' });
     if (!response.ok) {
-      throw new Error('Failed to fetch deputados');
+      console.error('Failed to fetch deputados:', response.statusText);
+      return [];
     }
     const data = await response.json();
     return data.dados;
@@ -55,18 +55,8 @@ function DeputadoCard({ deputado }: { deputado: Deputado }) {
   );
 }
 
-export default function CamaraPage() {
-  const [deputados, setDeputados] = useState<Deputado[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      const data = await getDeputados();
-      setDeputados(data);
-      setLoading(false);
-    }
-    fetchData();
-  }, []);
+export default async function CamaraPage() {
+  const deputados = await getDeputados();
 
   return (
     <div className="relative w-full min-h-screen overflow-hidden">
@@ -98,8 +88,8 @@ export default function CamaraPage() {
         </div>
       </header>
       <main className="relative z-10 container mx-auto px-6 py-8 text-white">
-        {loading ? (
-            <div className="text-center text-white">Carregando deputados...</div>
+        {deputados.length === 0 ? (
+            <div className="text-center text-white">Carregando deputados ou nenhum foi encontrado...</div>
         ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {deputados.map((deputado) => (
