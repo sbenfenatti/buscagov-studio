@@ -3,110 +3,199 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, ArrowDownCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const questions = [
-  'Qual deputado federal mais gastou com viagens em 2023?',
-  'Quais os projetos de lei sobre meio ambiente mais recentes?',
-  'Como foi a votação da última reforma tributária na Câmara?',
-];
+function Header() {
+  return (
+    <header className="absolute top-0 left-0 w-full z-20">
+      <nav className="container mx-auto px-6 py-4 flex justify-between items-center bg-black/20 backdrop-blur-md rounded-b-lg border-b border-white/10">
+        <div className="flex items-center">
+          <svg
+            className="h-8 w-8 text-white mr-3"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="1.5"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3.75 21h16.5M4.5 3h15M5.25 3v18M9.75 3v18M14.25 3v18M18.75 3v18M3.75 9h16.5"
+            />
+          </svg>
+          <h1 className="text-2xl font-bold text-white">Dados Abertos</h1>
+        </div>
+        <div className="hidden md:flex items-center space-x-6">
+          <a
+            href="#home"
+            className="text-white hover:text-blue-300 transition-colors"
+          >
+            Início
+          </a>
+          <a
+            href="#parliament"
+            className="text-white hover:text-blue-300 transition-colors"
+          >
+            O Parlamento
+          </a>
+        </div>
+      </nav>
+    </header>
+  );
+}
 
 function HeroSection() {
+  return (
+    <section
+      id="home"
+      className="section hero-section flex items-center justify-center"
+    >
+      <div className="absolute inset-0 bg-black/60"></div>
+      <div className="relative z-10 text-center text-white px-6">
+        <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          Explore os Dados Abertos
+        </h2>
+        <p className="text-lg text-gray-200 mb-8">
+          Um portal para o cidadão entender a atividade legislativa no Brasil.
+        </p>
+        <div className="relative rounded-md shadow-sm max-w-2xl mx-auto">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <Input
+            type="text"
+            id="searchInput"
+            className="block w-full rounded-md border-0 py-4 pl-12 pr-4 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-500 sm:text-sm sm:leading-6 h-auto"
+            placeholder="O que você quer saber sobre o Congresso?"
+          />
+        </div>
+      </div>
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white animate-bounce z-10">
+        <a href="#parliament" aria-label="Rolar para a próxima seção">
+          <ArrowDownCircle className="h-8 w-8" />
+        </a>
+      </div>
+    </section>
+  );
+}
+
+const parliamentQuestions = [
+  'Quais deputados representam o meu estado?',
+  'Quais foram as últimas despesas de um parlamentar?',
+  'Como um partido orientou a votação de uma proposta?',
+  'Qual o histórico de tramitação de um projeto de lei?',
+  'Quem são os autores de uma Proposta de Emenda à Constituição (PEC)?',
+];
+
+function ParliamentSection() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
-    }, 5000); // Change question every 5 seconds
-
+      setCurrentQuestionIndex(
+        (prevIndex) => (prevIndex + 1) % parliamentQuestions.length
+      );
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <section id="inicio" className="relative flex h-screen w-full flex-col items-center justify-center bg-hero-image bg-cover bg-center text-center">
-      <div className="absolute inset-0 bg-gray-900/60" />
-      <div className="relative z-10 mx-auto max-w-4xl px-4">
-        <h1 className="text-4xl font-bold text-white md:text-6xl">
-          Hub de Dados do Parlamento Brasileiro
-        </h1>
-        <p className="mt-4 text-lg text-gray-300 md:text-xl">
-          Sua fonte de informações sobre a atividade legislativa no Brasil,
-          simplificada com Inteligência Artificial.
-        </p>
-
-        <div className="relative mt-8 h-16">
-          {questions.map((question, index) => (
-            <p
+    <section
+      id="parliament"
+      className="section flex items-center justify-center"
+    >
+      <img
+        src="https://i.imgur.com/0SgT90S.jpeg"
+        alt="Congresso Nacional à noite"
+        className="absolute inset-0 w-full h-full object-cover -z-10"
+      />
+      <div className="absolute inset-0 bg-black/60"></div>
+      <div className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto">
+        <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          O Coração da Democracia Brasileira
+        </h2>
+        <div className="text-lg md:text-xl text-gray-200 mb-8 h-12 relative">
+          {parliamentQuestions.map((question, index) => (
+            <span
               key={index}
-              className={`question-text absolute left-1/2 top-1/2 w-full -translate-x-1/2 -translate-y-1/2 text-2xl font-medium text-white transition-opacity duration-1000 ease-in-out ${
+              className={cn(
+                'question-text absolute top-1/2 left-1/2 w-full -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000 ease-in-out',
                 index === currentQuestionIndex ? 'opacity-100' : 'opacity-0'
-              }`}
+              )}
             >
               &ldquo;{question}&rdquo;
-            </p>
+            </span>
           ))}
+        </div>
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-16">
+          <a
+            href="#"
+            className="flex flex-col items-center text-white hover:text-blue-300 transition-all duration-300 transform hover:scale-110"
+          >
+            <svg
+              className="h-16 w-16"
+              viewBox="0 0 100 50"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="4"
+            >
+              <path d="M 10 40 Q 50 10 90 40" />
+            </svg>
+            <span className="mt-2 font-semibold tracking-wide">
+              Senado Federal
+            </span>
+          </a>
+          <a
+            href="#"
+            className="flex flex-col items-center text-white hover:text-blue-300 transition-all duration-300 transform hover:scale-110"
+          >
+            <svg
+              className="h-16 w-16"
+              viewBox="0 0 100 50"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="4"
+            >
+              <path d="M 10 10 Q 50 40 90 10" />
+            </svg>
+            <span className="mt-2 font-semibold tracking-wide">
+              Câmara dos Deputados
+            </span>
+          </a>
         </div>
       </div>
     </section>
   );
 }
 
-function ParliamentSection() {
-  return (
-    <section id="explorar" className="relative flex h-screen w-full items-center justify-center bg-parliament-image bg-cover bg-center">
-       <div className="absolute inset-0 bg-gray-900/70" />
-       <div className="relative z-10 w-full max-w-4xl mx-auto px-4 text-center">
-        <h2 className="text-4xl font-bold text-white">Transparência ao seu alcance</h2>
-        <p className="mt-4 text-lg text-gray-300">
-          Explore dados, visualize tendências e entenda as decisões que moldam o nosso país.
-          Comece a pesquisar agora.
-        </p>
-         <form className="mt-8 flex w-full max-w-2xl mx-auto items-center space-x-2">
-            <Input 
-              type="text" 
-              placeholder="Faça sua pergunta sobre deputados, projetos de lei, votações..." 
-              className="flex-1 p-6 text-lg bg-gray-100/90 text-gray-800 placeholder:text-gray-500 border-transparent focus:border-blue-500 focus:ring-blue-500"
-            />
-            <Button type="submit" size="lg" className="p-6 bg-blue-600 hover:bg-blue-700">
-              <Search className="h-6 w-6" />
-              <span className="sr-only">Pesquisar</span>
-            </Button>
-        </form>
-      </div>
-    </section>
-  )
-}
-
-function AboutSection() {
-  return (
-    <section id="sobre" className="bg-gray-800 py-20 text-white">
-      <div className="container mx-auto px-6 text-center">
-        <h2 className="text-4xl font-bold">Sobre o Projeto</h2>
-        <p className="mt-4 max-w-3xl mx-auto text-lg text-gray-300">
-          O ParlamentoBR é uma plataforma de código aberto que visa facilitar o acesso e a compreensão dos dados públicos do legislativo brasileiro. Utilizando inteligência artificial, transformamos dados brutos em informações claras e acessíveis para qualquer cidadão.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-
 export default function Home() {
+  useEffect(() => {
+    document.documentElement.style.scrollBehavior = 'smooth';
+    const body = document.body;
+    body.style.scrollSnapType = 'y mandatory';
+    body.style.overflowY = 'scroll';
+    body.style.height = '100vh';
+
+    const sections = document.querySelectorAll('.section');
+    sections.forEach((section) => {
+      (section as HTMLElement).style.scrollSnapAlign = 'start';
+    });
+
+    return () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+      body.style.scrollSnapType = 'none';
+      body.style.overflowY = 'auto';
+      body.style.height = 'auto';
+    };
+  }, []);
+
   return (
     <main>
-      <header className="fixed top-0 left-0 w-full z-50 bg-gray-900/60 backdrop-blur-md border-b border-white/10">
-        <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="text-xl font-bold text-white">ParlamentoBR</div>
-          <div>
-            <a href="#inicio" className="text-gray-300 hover:text-white px-3 py-2 rounded-md transition-colors">Início</a>
-            <a href="#explorar" className="text-gray-300 hover:text-white px-3 py-2 rounded-md transition-colors">Explorar</a>
-            <a href="#sobre" className="text-gray-300 hover:text-white px-3 py-2 rounded-md transition-colors">Sobre</a>
-          </div>
-        </nav>
-      </header>
+      <Header />
       <HeroSection />
       <ParliamentSection />
-      <AboutSection />
     </main>
   );
 }

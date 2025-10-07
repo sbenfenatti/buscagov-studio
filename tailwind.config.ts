@@ -14,8 +14,9 @@ export default {
         'parliament-image': "url('https://i.imgur.com/0SgT90S.jpeg')",
       },
       fontFamily: {
-        body: ['Poppins', 'sans-serif'],
-        headline: ['Poppins', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
+        body: ['Inter', 'sans-serif'],
+        headline: ['Inter', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
