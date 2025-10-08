@@ -7,8 +7,6 @@ import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // --- Data Definitions ---
-// We'll use static data for now. Each deputy gets an ID from 1 to 513.
-
 const totalDeputados = 513;
 
 const getDemographicData = () => {
@@ -23,17 +21,26 @@ const getDemographicData = () => {
     else if (i <= 135 + 270) idade = '41-60 anos';
     else idade = '61+ anos';
 
-    // Patrimônio: Reverse order from previous data to match visual
+    // Patrimônio: 17 (sem), 31 (até 100k), 101 (100k-500k), 84 (500k-1M), 99 (1M-2M), 101 (2M-5M), 80 (>5M)
     let patrimonio;
-    if (i <= 17) patrimonio = 'Sem patrimônio declarado';
-    else if (i <= 17 + 31) patrimonio = 'Até R$100 mil';
-    else if (i <= 17 + 31 + 101) patrimonio = 'R$100 mil a R$500 mil';
-    else if (i <= 17 + 31 + 101 + 84) patrimonio = 'R$500 mil a R$1 milhão';
-    else if (i <= 17 + 31 + 101 + 84 + 99) patrimonio = 'R$1 milhão a R$2 milhões';
-    else if (i <= 17 + 31 + 101 + 84 + 99 + 101) patrimonio = 'R$2 milhões a R$5 milhões';
-    else patrimonio = 'Acima de R$5 milhões';
-    
-    data.push({ id: i, genero, idade, patrimonio });
+    if (i <= 80) patrimonio = 'Acima de R$5 milhões';
+    else if (i <= 80 + 101) patrimonio = 'R$2 milhões a R$5 milhões';
+    else if (i <= 80 + 101 + 99) patrimonio = 'R$1 milhão a R$2 milhões';
+    else if (i <= 80 + 101 + 99 + 84) patrimonio = 'R$500 mil a R$1 milhão';
+    else if (i <= 80 + 101 + 99 + 84 + 101) patrimonio = 'R$100 mil a R$500 mil';
+    else if (i <= 80 + 101 + 99 + 84 + 101 + 31) patrimonio = 'Até R$100 mil';
+    else patrimonio = 'Sem patrimônio declarado';
+
+    // Raça/Cor: 370 Brancos, 107 Pardos, 27 Pretos, 5 Indígenas, 3 Amarelos, 1 Não Informado
+    let raca;
+    if (i <= 370) raca = 'Branca';
+    else if (i <= 370 + 107) raca = 'Parda';
+    else if (i <= 370 + 107 + 27) raca = 'Preta';
+    else if (i <= 370 + 107 + 27 + 5) raca = 'Indígena';
+    else if (i <= 370 + 107 + 27 + 5 + 3) raca = 'Amarela';
+    else raca = 'Não Informado';
+
+    data.push({ id: i, genero, idade, patrimonio, raca });
   }
   return data;
 };
@@ -42,26 +49,35 @@ const getDemographicData = () => {
 // --- Color Mappings ---
 const colorConfig = {
   genero: {
-    'Masculino': 'hsl(210 30% 60%)',
-    'Feminino': 'hsl(330 80% 70%)',
+    'Masculino': 'hsl(210 50% 60%)', // Blue
+    'Feminino': 'hsl(330 80% 70%)', // Pink
   },
   idade: {
-    '21-40 anos': 'hsl(180 70% 60%)',
-    '41-60 anos': 'hsl(195 70% 70%)',
-    '61+ anos': 'hsl(210 70% 80%)',
+    '21-40 anos': 'hsl(120 60% 70%)', // Green
+    '41-60 anos': 'hsl(45 90% 65%)',  // Yellow
+    '61+ anos': 'hsl(0 80% 70%)',   // Red
   },
   patrimonio: {
-    'Sem patrimônio declarado': 'hsl(60 5% 50%)',
-    'Até R$100 mil': 'hsl(260 90% 96%)',
-    'R$100 mil a R$500 mil': 'hsl(260 90% 90%)',
-    'R$500 mil a R$1 milhão': 'hsl(260 90% 85%)',
-    'R$1 milhão a R$2 milhões': 'hsl(260 90% 80%)',
-    'R$2 milhões a R$5 milhões': 'hsl(260 90% 75%)',
-    'Acima de R$5 milhões': 'hsl(260 90% 70%)',
+    'Sem patrimônio declarado': 'hsl(0 0% 60%)',      // Grey
+    'Até R$100 mil': 'hsl(180 70% 80%)',            // Cyan
+    'R$100 mil a R$500 mil': 'hsl(150 70% 60%)',     // Light Green
+    'R$500 mil a R$1 milhão': 'hsl(90 70% 60%)',      // Lime Green
+    'R$1 milhão a R$2 milhões': 'hsl(60 90% 60%)',      // Yellow
+    'R$2 milhões a R$5 milhões': 'hsl(30 90% 60%)',      // Orange
+    'Acima de R$5 milhões': 'hsl(360 90% 60%)',     // Red
   },
+  raca: {
+    'Branca': 'hsl(40 50% 80%)',     // Beige
+    'Parda': 'hsl(30 40% 60%)',      // Brown
+    'Preta': 'hsl(0 0% 30%)',        // Dark Grey / Black
+    'Amarela': 'hsl(60 100% 70%)',   // Yellow
+    'Indígena': 'hsl(0 70% 60%)',      // Red
+    'Não Informado': 'hsl(0 0% 85%)', // Light Grey
+  }
 };
 
 type FilterType = keyof typeof colorConfig;
+
 
 // --- Waffle Chart Component ---
 const WaffleChart = ({ data, activeFilter }: { data: any[], activeFilter: FilterType }) => {
@@ -75,7 +91,6 @@ const WaffleChart = ({ data, activeFilter }: { data: any[], activeFilter: Filter
           />
         </Tooltip>
       ))}
-       {/* Simple grid definition for 27x19 = 513 */}
       <style jsx>{`
         .grid-cols-27 {
           grid-template-columns: repeat(27, minmax(0, 1fr));
@@ -93,14 +108,14 @@ const WaffleChart = ({ data, activeFilter }: { data: any[], activeFilter: Filter
 const Tooltip = ({ children, content }) => {
     const [show, setShow] = useState(false);
     return (
-        <div 
+        <div
             className="relative"
             onMouseEnter={() => setShow(true)}
             onMouseLeave={() => setShow(false)}
         >
             {children}
             <div className={cn(
-                "absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs rounded py-1 px-2 transition-opacity duration-300 pointer-events-none",
+                "absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs rounded py-1 px-2 transition-opacity duration-300 pointer-events-none z-30",
                 show ? "opacity-100" : "opacity-0"
             )}>
                 {content}
@@ -128,11 +143,12 @@ const Legend = ({ activeFilter }: { activeFilter: FilterType }) => {
 export default function CamaraPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('genero');
   const demographicData = useMemo(() => getDemographicData(), []);
-  
+
   const filters: { label: string; key: FilterType }[] = [
     { label: 'Gênero', key: 'genero' },
     { label: 'Idade', key: 'idade' },
     { label: 'Patrimônio', key: 'patrimonio' },
+    { label: 'Raça/Cor', key: 'raca' },
   ];
 
   return (
@@ -175,7 +191,7 @@ export default function CamaraPage() {
             <h1 className="text-5xl font-extrabold tracking-tight">Você se sente representado?</h1>
             <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">Cada um dos 513 blocos representa uma cadeira na Câmara dos Deputados. Use os filtros para ver a composição demográfica da casa.</p>
         </div>
-        
+
         <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-lg p-6 w-full max-w-5xl">
             <div className="flex items-center justify-center gap-4 mb-8">
                 {filters.map(filter => (
@@ -192,7 +208,7 @@ export default function CamaraPage() {
                     </Button>
                 ))}
             </div>
-            
+
             <WaffleChart data={demographicData} activeFilter={activeFilter} />
             <Legend activeFilter={activeFilter} />
         </div>
