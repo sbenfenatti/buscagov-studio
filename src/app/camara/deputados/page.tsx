@@ -13,6 +13,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { cn } from '@/lib/utils';
+
 
 type DeputadoMesa = {
   id: number;
@@ -51,36 +53,42 @@ const MemberInfo = ({ dep }: { dep: DeputadoMesa }) => (
         <Image 
             src={dep.urlFoto} 
             alt={`Foto de ${dep.nome}`}
-            width={96}
-            height={96}
+            width={80}
+            height={80}
             className="rounded-full border-2 border-white/50 mb-3"
         />
-        <h3 className="font-bold text-lg">{dep.nome}</h3>
-        <p className="text-sm text-gray-300">{`${dep.siglaPartido}-${dep.siglaUf}`}</p>
+        <h3 className="font-bold text-md">{dep.nome}</h3>
+        <p className="text-xs text-gray-300">{`${dep.siglaPartido}-${dep.siglaUf}`}</p>
         <Badge variant="secondary" className="mt-2 bg-blue-300/20 text-blue-100 text-xs">{dep.titulo}</Badge>
     </div>
 );
 
-const GroupAccordionItem = ({ value, title, description, members, icon: Icon }: { value: string, title: string, description: string, members: DeputadoMesa[], icon: React.ElementType }) => {
+const TimelineItem = ({ value, title, description, members, icon: Icon, side }: { value: string, title: string, description: string, members: DeputadoMesa[], icon: React.ElementType, side: 'left' | 'right' }) => {
     if (!members || members.length === 0) return null;
+
     return (
-        <AccordionItem value={value} className="bg-black/30 backdrop-blur-md border-white/20 text-white rounded-lg">
-            <AccordionTrigger className="hover:no-underline p-6">
-                <div className="flex items-center gap-4">
-                    <Icon className="text-blue-300 h-8 w-8" />
-                    <div>
-                        <h3 className="text-xl font-bold text-left">{title}</h3>
-                        <p className="text-sm text-gray-300 text-left">{description}</p>
+        <div className="relative w-full">
+            {/* The Circle on the timeline */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-8 bg-blue-300 rounded-full border-4 border-black/50 flex items-center justify-center">
+                 <Icon className="text-black h-4 w-4" />
+            </div>
+
+            <AccordionItem value={value} className={cn(
+                "relative border-none w-[calc(50%-2rem)]",
+                side === 'left' ? 'mr-auto' : 'ml-auto'
+            )}>
+                 <AccordionTrigger className="hover:no-underline bg-black/30 backdrop-blur-md border border-white/20 text-white rounded-lg p-6 flex flex-col items-center gap-2 text-center">
+                    <h3 className="text-xl font-bold">{title}</h3>
+                    <p className="text-sm text-gray-300 font-normal">{description}</p>
+                    <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200 text-blue-300 mt-2" />
+                </AccordionTrigger>
+                <AccordionContent className="mt-4 bg-black/50 backdrop-blur-sm rounded-lg p-4">
+                    <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+                        {members.map(dep => <MemberInfo key={dep.id} dep={dep} />)}
                     </div>
-                </div>
-                 <ChevronDown className="h-6 w-6 shrink-0 transition-transform duration-200 text-blue-300" />
-            </AccordionTrigger>
-            <AccordionContent className="p-6 pt-0">
-                <div className="flex flex-wrap justify-center gap-x-6 gap-y-4 pt-4 border-t border-white/20">
-                    {members.map(dep => <MemberInfo key={dep.id} dep={dep} />)}
-                </div>
-            </AccordionContent>
-        </AccordionItem>
+                </AccordionContent>
+            </AccordionItem>
+        </div>
     )
 };
 
@@ -92,6 +100,14 @@ export default function DeputadosPage() {
   const vices = mesaDiretora.filter(m => m.titulo.includes('Vice-Presidente'));
   const secretarios = mesaDiretora.filter(m => m.titulo.includes('Secretári')); // Pega 'Secretário' e 'Secretária'
   const suplentes = mesaDiretora.filter(m => m.titulo.includes('Suplente'));
+  
+  const timelineItems = [
+    { value: "presidente", title: "Presidência", description: "Comanda as sessões.", members: presidente, icon: Crown, side: 'left' as const },
+    { value: "vices", title: "Vice-Presidência", description: "Substituem o presidente.", members: vices, icon: Users, side: 'right' as const },
+    { value: "secretarios", title: "Secretaria", description: "Controlam atas e frequência.", members: secretarios, icon: User, side: 'left' as const },
+    { value: "suplentes", title: "Suplência", description: "Substituem os secretários.", members: suplentes, icon: Users, side: 'right' as const },
+  ];
+
 
   return (
     <div className="relative w-full min-h-screen overflow-auto">
@@ -132,42 +148,20 @@ export default function DeputadosPage() {
       </header>
 
       <main className="relative z-10 container mx-auto px-6 py-12 text-white">
-        <div className="text-center mb-12">
+        <div className="text-center mb-16">
             <h1 className="text-4xl font-bold flex items-center justify-center gap-4"><Shield size={36} /> Mesa Diretora</h1>
-            <p className="text-lg mt-4 text-gray-300 max-w-2xl mx-auto">A Mesa Diretora é responsável pela direção dos trabalhos legislativos e dos serviços administrativos da Câmara. Clique em cada cargo para ver os membros.</p>
+            <p className="text-lg mt-4 text-gray-300 max-w-2xl mx-auto">A Mesa Diretora é responsável pela direção dos trabalhos legislativos. Clique em cada cargo para ver os membros.</p>
         </div>
 
         {mesaDiretora.length > 0 ? (
-             <Accordion type="single" collapsible className="w-full max-w-6xl mx-auto">
-                <div className="grid md:grid-cols-2 gap-6">
-                    <GroupAccordionItem 
-                        value="presidente"
-                        title="Presidência"
-                        description="Comanda as sessões."
-                        members={presidente}
-                        icon={Crown}
-                    />
-                    <GroupAccordionItem 
-                        value="vices"
-                        title="Vice-Presidência"
-                        description="Substituem o presidente."
-                        members={vices}
-                        icon={Users}
-                    />
-                    <GroupAccordionItem 
-                        value="secretarios"
-                        title="Secretaria"
-                        description="Controlam atas e frequência."
-                        members={secretarios}
-                        icon={User}
-                    />
-                    <GroupAccordionItem 
-                        value="suplentes"
-                        title="Suplência"
-                        description="Substituem os secretários."
-                        members={suplentes}
-                        icon={Users}
-                    />
+             <Accordion type="single" collapsible className="w-full max-w-4xl mx-auto">
+                <div className="relative flex flex-col items-center gap-12">
+                   {/* The vertical line */}
+                   <div className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-0.5 bg-white/20" />
+                   
+                   {timelineItems.map((item) => (
+                       <TimelineItem key={item.value} {...item} />
+                   ))}
                 </div>
             </Accordion>
         ) : (
