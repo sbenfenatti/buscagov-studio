@@ -64,7 +64,7 @@ const MemberInfo = ({ dep }: { dep: DeputadoMesa }) => (
 const GroupAccordionItem = ({ value, title, description, members, icon: Icon }: { value: string, title: string, description: string, members: DeputadoMesa[], icon: React.ElementType }) => {
     if (!members || members.length === 0) return null;
     return (
-        <AccordionItem value={value} className="bg-black/30 backdrop-blur-md border-white/20 text-white rounded-lg mb-4">
+        <AccordionItem value={value} className="bg-black/30 backdrop-blur-md border-white/20 text-white rounded-lg">
             <AccordionTrigger className="hover:no-underline p-6">
                 <div className="flex items-center gap-4">
                     <Icon className="text-blue-300 h-8 w-8" />
@@ -139,7 +139,7 @@ export default function DeputadosPage() {
 
         {mesaDiretora.length > 0 ? (
              <Accordion type="single" collapsible className="w-full max-w-6xl mx-auto">
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid md:grid-cols-2 gap-6">
                     <GroupAccordionItem 
                         value="presidente"
                         title="Presidência"
