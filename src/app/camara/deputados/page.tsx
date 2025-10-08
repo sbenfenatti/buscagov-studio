@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, Shield, Crown, Group, ClipboardList, Loader2, ChevronDown, ChevronUp, Building2 } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Crown, Group, ClipboardList, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from '@/lib/utils';
@@ -20,6 +20,13 @@ type Deputado = {
   dataFim: string | null;
 };
 
+type DeputadoPlenario = {
+  id: number;
+  nome: string;
+  siglaPartido: string;
+  siglaUf: string;
+};
+
 type TimelineStep = {
   key: 'secretaria' | 'vice' | 'presidencia' | 'suplencia';
   label: string;
@@ -27,27 +34,41 @@ type TimelineStep = {
   description: string;
 };
 
-type BlocoPartidario = {
-  id: string;
-  nome: string;
-  partidos: Array<{
-    sigla: string;
-    nome: string;
-    quantidadeDeputados: number;
-  }>;
-  totalDeputados: number;
-  lider: {
-    nome: string;
-    partido: string;
-  } | null;
+// Cores para partidos - paleta diversificada
+const partidoCores: Record<string, string> = {
+  'PT': '#FF0000',
+  'PL': '#0066CC', 
+  'UNIÃO': '#FFA500',
+  'PP': '#800080',
+  'PSD': '#FFD700',
+  'REPUBLICANOS': '#008000',
+  'MDB': '#32CD32',
+  'PDT': '#FF1493',
+  'PSB': '#FF6347',
+  'PSDB': '#4169E1',
+  'SOLIDARIEDADE': '#FF8C00',
+  'PODE': '#9370DB',
+  'PSOL': '#DC143C',
+  'CIDADANIA': '#7FFF00',
+  'AVANTE': '#00CED1',
+  'PMN': '#B22222',
+  'PROS': '#CD853F',
+  'PC do B': '#8B0000',
+  'PATRIOTA': '#4682B4',
+  'REDE': '#00FF7F'
 };
 
-type DeputadoBloco = {
-  id: number;
-  nome: string;
-  siglaPartido: string;
-  siglaUf: string;
-  urlFoto: string;
+// Função para gerar cor para partido não mapeado
+const gerarCorPartido = (sigla: string): string => {
+  if (partidoCores[sigla]) return partidoCores[sigla];
+  
+  // Gera cor baseada no hash da sigla
+  let hash = 0;
+  for (let i = 0; i < sigla.length; i++) {
+    hash = sigla.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 70%, 50%)`;
 };
 
 const MemberCard = ({ dep }: { dep: Deputado }) => (
@@ -67,101 +88,133 @@ const MemberCard = ({ dep }: { dep: Deputado }) => (
   </div>
 );
 
-const DeputadoCard = ({ dep }: { dep: DeputadoBloco }) => (
-  <div className="bg-black/30 border border-white/10 rounded-lg p-4 flex flex-col items-center text-center transform transition-all hover:scale-105 hover:bg-black/40 min-w-[180px] max-w-[220px]">
-    <Image 
-      src={dep.urlFoto} 
-      alt={`Foto de ${dep.nome}`}
-      width={80}
-      height={80}
-      className="rounded-full border border-white/20 mb-3"
-    />
-    <h4 className="font-semibold text-white text-sm mb-1">{dep.nome}</h4>
-    <p className="text-xs text-gray-400">{`${dep.siglaPartido}-${dep.siglaUf}`}</p>
-  </div>
-);
+// Componente do Chart Semicircular do Plenário
+const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
+  deputados: DeputadoPlenario[];
+  hoveredPartido: string | null;
+  setHoveredPartido: (partido: string | null) => void;
+}) => {
+  const partidosData = useMemo(() => {
+    const contagem = deputados.reduce((acc, dep) => {
+      acc[dep.siglaPartido] = (acc[dep.siglaPartido] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    // Ordena partidos por quantidade (maior primeiro)
+    const partidosOrdenados = Object.entries(contagem)
+      .sort(([,a], [,b]) => b - a)
+      .map(([sigla, quantidade]) => ({ sigla, quantidade, cor: gerarCorPartido(sigla) }));
+    
+    return partidosOrdenados;
+  }, [deputados]);
 
-const BlocoCard = ({ bloco, onToggle, isExpanded, deputados, loadingDeputados }: {
-  bloco: BlocoPartidario;
-  onToggle: () => void;
-  isExpanded: boolean;
-  deputados: DeputadoBloco[] | null;
-  loadingDeputados: boolean;
-}) => (
-  <div className="bg-black/40 border border-white/20 rounded-lg overflow-hidden transition-all duration-300">
-    {/* Card Header */}
-    <div 
-      className="p-6 cursor-pointer hover:bg-black/50 transition-colors"
-      onClick={onToggle}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-3">
-            <Building2 className="h-6 w-6 text-blue-300" />
-            <h3 className="font-bold text-lg text-white">{bloco.nome}</h3>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex flex-wrap gap-2">
-              {bloco.partidos.map(partido => (
-                <Badge 
-                  key={partido.sigla} 
-                  variant="outline" 
-                  className="text-xs bg-white/10 text-white border-white/20"
-                >
-                  {partido.sigla}
-                </Badge>
-              ))}
-            </div>
-            
-            <div className="flex items-center gap-4 text-sm text-gray-300">
-              <span>
-                <strong className="text-white">{bloco.totalDeputados}</strong> deputados
-              </span>
-              {bloco.lider && (
-                <span>
-                  Líder: <strong className="text-white">{bloco.lider.nome}</strong>
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+  // Distribui deputados em posições semicirculares
+  const posicoes = useMemo(() => {
+    const totalDeputados = deputados.length;
+    const raio = 200; // Raio base
+    const numeroFileiras = 8; // Número de arcos concêntricos
+    const anguloInicio = Math.PI * 0.1; // 18 graus
+    const anguloFim = Math.PI * 0.9; // 162 graus (semicírculo)
+    
+    const posicoesList: Array<{
+      x: number;
+      y: number;
+      partido: string;
+      cor: string;
+    }> = [];
+    
+    let deputadoIndex = 0;
+    
+    // Para cada partido, calcular posições em ordem
+    partidosData.forEach(({ sigla, quantidade, cor }) => {
+      for (let i = 0; i < quantidade; i++) {
+        // Distribui deputados em espiral pelos arcos
+        const fileira = Math.floor(deputadoIndex / 64) % numeroFileiras;
+        const posicaoNaFileira = deputadoIndex % 64;
+        const deputadosPorFileira = Math.min(64, totalDeputados - fileira * 64);
         
-        <div className="flex-shrink-0 ml-4">
-          {isExpanded ? (
-            <ChevronUp className="h-5 w-5 text-white/70" />
+        const raioAtual = raio + (fileira * 25);
+        const angulo = anguloInicio + (anguloFim - anguloInicio) * (posicaoNaFileira / Math.max(1, deputadosPorFileira - 1));
+        
+        const x = Math.cos(angulo) * raioAtual;
+        const y = Math.sin(angulo) * raioAtual * 0.6; // Achatamento para parecer mais semicírculo
+        
+        posicoesList.push({ x, y, partido: sigla, cor });
+        deputadoIndex++;
+      }
+    });
+    
+    return posicoesList;
+  }, [deputados, partidosData]);
+
+  const totalDeputados = deputados.length;
+  const partidoInfo = hoveredPartido ? partidosData.find(p => p.sigla === hoveredPartido) : null;
+
+  return (
+    <div 
+      className="relative w-full max-w-4xl mx-auto h-96 flex items-end justify-center"
+      onMouseLeave={() => setHoveredPartido(null)}
+    >
+      {/* SVG do semicírculo */}
+      <svg 
+        viewBox="-300 -50 600 300" 
+        className="w-full h-full overflow-visible"
+      >
+        {posicoes.map((pos, index) => {
+          const isHovered = hoveredPartido === pos.partido;
+          const isAnotherHovered = hoveredPartido !== null && !isHovered;
+          
+          return (
+            <circle
+              key={index}
+              cx={pos.x}
+              cy={-pos.y} // Negativo para inverter o Y (SVG tem origem no topo)
+              r={isHovered ? "4" : "3"}
+              fill={pos.cor}
+              className={cn(
+                "transition-all duration-200 cursor-pointer",
+                isAnotherHovered ? "opacity-20" : "opacity-100",
+                isHovered ? "drop-shadow-lg" : ""
+              )}
+              onMouseEnter={() => setHoveredPartido(pos.partido)}
+            />
+          );
+        })}
+      </svg>
+      
+      {/* Legenda Central */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="text-center">
+          {hoveredPartido && partidoInfo ? (
+            <>
+              <div 
+                className="text-4xl font-bold transition-all duration-300"
+                style={{ color: partidoInfo.cor }}
+              >
+                {hoveredPartido}
+              </div>
+              <div className="text-xl text-white mt-1">
+                {partidoInfo.quantidade} deputados
+              </div>
+            </>
           ) : (
-            <ChevronDown className="h-5 w-5 text-white/70" />
+            <>
+              <div className="text-4xl font-bold text-white">
+                🏛️ {totalDeputados}
+              </div>
+              <div className="text-xl text-gray-300 mt-1">
+                Deputados
+              </div>
+              <div className="text-sm text-gray-400 mt-1">
+                57ª Legislatura
+              </div>
+            </>
           )}
         </div>
       </div>
     </div>
-    
-    {/* Expanded Content */}
-    {isExpanded && (
-      <div className="border-t border-white/10 p-6">
-        {loadingDeputados ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-300" />
-          </div>
-        ) : deputados && deputados.length > 0 ? (
-          <>
-            <h4 className="text-white font-semibold mb-4">Deputados do Bloco</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {deputados.map(dep => (
-                <DeputadoCard key={dep.id} dep={dep} />
-              ))}
-            </div>
-          </>
-        ) : (
-          <p className="text-gray-400 text-center py-4">
-            Nenhum deputado encontrado para este bloco.
-          </p>
-        )}
-      </div>
-    )}
-  </div>
-);
+  );
+};
 
 const Timeline = ({ 
   steps, 
@@ -213,17 +266,13 @@ const Timeline = ({
 
 export default function DeputadosPage() {
   const [mesaDiretora, setMesaDiretora] = useState<Deputado[]>([]);
-  const [blocos, setBlocos] = useState<BlocoPartidario[]>([]);
+  const [deputados, setDeputados] = useState<DeputadoPlenario[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingBlocos, setLoadingBlocos] = useState(true);
+  const [loadingDeputados, setLoadingDeputados] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [errorBlocos, setErrorBlocos] = useState<string | null>(null);
+  const [errorDeputados, setErrorDeputados] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState<'secretaria' | 'vice' | 'presidencia' | 'suplencia'>('presidencia');
-  
-  // Estado para controlar expansão dos blocos e lazy loading
-  const [expandedBlocos, setExpandedBlocos] = useState<Set<string>>(new Set());
-  const [deputadosBlocos, setDeputadosBlocos] = useState<Record<string, DeputadoBloco[]>>({});
-  const [loadingDeputadosBlocos, setLoadingDeputadosBlocos] = useState<Set<string>>(new Set());
+  const [hoveredPartido, setHoveredPartido] = useState<string | null>(null);
 
   const timelineSteps: TimelineStep[] = [
     { key: 'secretaria', label: 'Secretaria', icon: ClipboardList, description: 'Responsável pela administração interna, atas das sessões e gestão de documentos.' },
@@ -231,69 +280,6 @@ export default function DeputadosPage() {
     { key: 'presidencia', label: 'Presidência', icon: Crown, description: 'Dirige as sessões da Câmara, representa a instituição e supervisiona todos os trabalhos.' },
     { key: 'suplencia', label: 'Suplência', icon: Group, description: 'Substitui os Secretários quando necessário, garantindo o funcionamento das atividades.' }
   ];
-
-  // Função para carregar deputados de um bloco (lazy loading)
-  const loadDeputadosBloco = async (bloco: BlocoPartidario) => {
-    if (deputadosBlocos[bloco.id] || loadingDeputadosBlocos.has(bloco.id)) {
-      return; // Já carregado ou carregando
-    }
-
-    setLoadingDeputadosBlocos(prev => new Set([...prev, bloco.id]));
-
-    try {
-      // Busca deputados de cada partido do bloco
-      const deputadosPromises = bloco.partidos.map(async (partido) => {
-        const response = await fetch(`/api/camara/deputados?siglaPartido=${partido.sigla}&itens=100`);
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success) {
-            return result.data.map((dep: any) => ({
-              id: dep.id,
-              nome: dep.nome,
-              siglaPartido: dep.siglaPartido,
-              siglaUf: dep.siglaUf,
-              urlFoto: dep.urlFoto
-            }));
-          }
-        }
-        return [];
-      });
-
-      const deputadosArrays = await Promise.all(deputadosPromises);
-      const todosDeputados = deputadosArrays.flat();
-      
-      setDeputadosBlocos(prev => ({
-        ...prev,
-        [bloco.id]: todosDeputados
-      }));
-    } catch (error) {
-      console.error(`Erro ao carregar deputados do bloco ${bloco.nome}:`, error);
-    } finally {
-      setLoadingDeputadosBlocos(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(bloco.id);
-        return newSet;
-      });
-    }
-  };
-
-  // Função para alternar expansão de bloco
-  const toggleBloco = (blocoId: string) => {
-    const bloco = blocos.find(b => b.id === blocoId);
-    if (!bloco) return;
-
-    setExpandedBlocos(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(blocoId)) {
-        newSet.delete(blocoId);
-      } else {
-        newSet.add(blocoId);
-        // Carrega deputados quando expande
-        loadDeputadosBloco(bloco);
-      }
-      return newSet;
-    });
-  };
 
   useEffect(() => {
     async function getMesaDiretora() {
@@ -327,12 +313,12 @@ export default function DeputadosPage() {
   }, []);
 
   useEffect(() => {
-    async function getBlocos() {
+    async function getDeputados() {
       try {
-        setLoadingBlocos(true);
-        setErrorBlocos(null);
+        setLoadingDeputados(true);
+        setErrorDeputados(null);
         
-        const response = await fetch('/api/camara/blocos?legislatura=57');
+        const response = await fetch('/api/camara/deputados?itens=513');
         
         if (!response.ok) {
           throw new Error(`Falha na requisição: ${response.statusText}`);
@@ -344,16 +330,23 @@ export default function DeputadosPage() {
           throw new Error(result.error || 'Erro desconhecido');
         }
         
-        setBlocos(result.data || []);
+        const deputadosData = result.data.map((dep: any) => ({
+          id: dep.id,
+          nome: dep.nome,
+          siglaPartido: dep.siglaPartido,
+          siglaUf: dep.siglaUf
+        }));
+        
+        setDeputados(deputadosData);
         
       } catch (e: any) {
-        console.error('Erro ao buscar dados dos Blocos:', e);
-        setErrorBlocos('Não foi possível carregar os dados dos Blocos Parlamentares. Tente novamente mais tarde.');
+        console.error('Erro ao buscar dados dos Deputados:', e);
+        setErrorDeputados('Não foi possível carregar os dados dos Deputados. Tente novamente mais tarde.');
       } finally {
-        setLoadingBlocos(false);
+        setLoadingDeputados(false);
       }
     }
-    getBlocos();
+    getDeputados();
   }, []);
 
   // Filtros mais específicos para separar corretamente os cargos
@@ -489,51 +482,38 @@ export default function DeputadosPage() {
           )}
         </section>
 
-        {/* Seção Blocos Parlamentares */}
+        {/* Seção Plenário */}
         <section>
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold flex items-center justify-center gap-4">
-              <Building2 size={36} /> Blocos Parlamentares
+              🏛️ Plenário da Câmara
             </h2>
             <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">
-              Os blocos parlamentares são uniões de partidos políticos que se agrupam para fins regimentais e administrativos. 
-              Clique em cada bloco para ver os deputados que o compõem.
+              Visualização do plenário com todos os 513 deputados organizados por partido. 
+              Passe o mouse sobre as cadeiras para ver a composição partidária.
             </p>
           </div>
           
-          {loadingBlocos && (
+          {loadingDeputados && (
             <div className="flex justify-center items-center h-40">
               <Loader2 className="h-12 w-12 animate-spin text-blue-300" />
             </div>
           )}
 
-          {errorBlocos && (
+          {errorDeputados && (
               <Alert variant="destructive" className="max-w-xl mx-auto bg-red-900/30 border-red-500/50 text-red-200">
                   <AlertTitle>Erro ao carregar dados</AlertTitle>
-                  <AlertDescription>{errorBlocos}</AlertDescription>
+                  <AlertDescription>{errorDeputados}</AlertDescription>
               </Alert>
           )}
 
-          {!loadingBlocos && !errorBlocos && (
-            <div className="space-y-6">
-              {blocos.length > 0 ? (
-                blocos.map(bloco => (
-                  <BlocoCard
-                    key={bloco.id}
-                    bloco={bloco}
-                    onToggle={() => toggleBloco(bloco.id)}
-                    isExpanded={expandedBlocos.has(bloco.id)}
-                    deputados={deputadosBlocos[bloco.id] || null}
-                    loadingDeputados={loadingDeputadosBlocos.has(bloco.id)}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-400">
-                    Nenhum bloco parlamentar encontrado para esta legislatura.
-                  </p>
-                </div>
-              )}
+          {!loadingDeputados && !errorDeputados && deputados.length > 0 && (
+            <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-lg p-8">
+              <PlenarioChart
+                deputados={deputados}
+                hoveredPartido={hoveredPartido}
+                setHoveredPartido={setHoveredPartido}
+              />
             </div>
           )}
         </section>
