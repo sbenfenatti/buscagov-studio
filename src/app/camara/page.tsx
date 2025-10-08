@@ -11,46 +11,38 @@ import { cn } from '@/lib/utils';
 const totalDeputados = 513;
 
 const getDemographicData = () => {
-  const data = Array.from({ length: totalDeputados }, (_, i) => ({ id: i }));
+    const data: any[] = Array.from({ length: totalDeputados }, (_, i) => ({ id: i }));
 
-  const camaraCounts = {
-    genero: { 'Deputadas': 90, 'Deputados': 423 },
-    idade: { '61-87 anos': 108, '41-60 anos': 270, '21-40 anos': 135 },
-    patrimonio: { 'Acima de R$5 milhões': 80, 'R$500 mil a R$2 milhões': 183, 'R$100 mil a R$500 mil': 101, 'Até R$100 mil': 31, 'Sem patrimônio declarado': 17 },
-    raca: { 'Branca': 370, 'Parda': 107, 'Preta': 27, 'Amarela': 3, 'Indígena': 5, 'Não Informado': 1 },
-    escolaridade: { 'Pós-graduação': 13, 'Superior Completo': 421, 'Ensino Médio': 79 },
-    mandatos: { '5 ou mais': 55, '4º Mandato': 42, '3º Mandato': 70, '2º Mandato': 118, '1º Mandato': 228 },
-  };
+    const camaraCounts = {
+        genero: { 'Deputadas': 90, 'Deputados': 423 },
+        idade: { '61-87 anos': 108, '41-60 anos': 270, '21-40 anos': 135 },
+        patrimonio: { 'Acima de R$5 milhões': 80, 'R$500 mil a R$2 milhões': 183, 'R$100 mil a R$500 mil': 101, 'Até R$100 mil': 31, 'Sem patrimônio declarado': 17 },
+        raca: { 'Branca': 370, 'Parda': 107, 'Preta': 27, 'Amarela': 3, 'Indígena': 5, 'Não Informado': 1 },
+        escolaridade: { 'Pós-graduação': 13, 'Superior Completo': 421, 'Ensino Médio': 79 },
+        mandatos: { '5 ou mais': 55, '4º Mandato': 42, '3º Mandato': 70, '2º Mandato': 118, '1º Mandato': 228 },
+    };
 
-  // Shuffle array function
-  const shuffle = (array: any[]) => {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-  };
-
-  // Assign categories to the 513 deputies
-  for (const key in camaraCounts) {
-    const categoryKey = key as keyof typeof camaraCounts;
-    const distribution = Object.entries(camaraCounts[categoryKey]).flatMap(([category, count]) => Array(count).fill(category));
-    shuffle(distribution);
-    for (let i = 0; i < totalDeputados; i++) {
-        if (distribution[i]) {
-            data[i][categoryKey] = distribution[i];
+    // Assign categories sequentially to group them
+    for (const key in camaraCounts) {
+        const categoryKey = key as keyof typeof camaraCounts;
+        const distribution = Object.entries(camaraCounts[categoryKey]).flatMap(([category, count]) => Array(count).fill(category));
+        
+        for (let i = 0; i < totalDeputados; i++) {
+            if (distribution[i]) {
+                data[i][categoryKey] = distribution[i];
+            }
         }
     }
-  }
 
-  return data;
+    return data;
 };
 
 
 // --- Color and Icon Mappings ---
 const colorConfig = {
   genero: {
-    'Deputados': { color: 'hsl(210 80% 55%)', icon: Users },
     'Deputadas': { color: 'hsl(340 80% 60%)', icon: Users },
+    'Deputados': { color: 'hsl(210 80% 55%)', icon: Users },
   },
   idade: {
     '61-87 anos': { color: 'hsl(280 70% 60%)', icon: TrendingUp },
