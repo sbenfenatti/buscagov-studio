@@ -3,10 +3,10 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, Shield } from 'lucide-react';
+import { ArrowLeft, User, Users, Shield, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 type DeputadoMesa = {
   id: number;
@@ -40,28 +40,45 @@ function getMesaDiretoraSimulada(): DeputadoMesa[] {
     }));
 }
 
-
-const MemberCard = ({ dep, className }: { dep: DeputadoMesa, className?: string }) => (
-    <Card className={cn("bg-black/30 backdrop-blur-md border-white/20 text-white text-center w-48 transition-all hover:bg-black/50 hover:scale-105", className)}>
-        <CardContent className="p-4 flex flex-col items-center">
-            <Image 
-                src={dep.urlFoto} 
-                alt={`Foto de ${dep.nome}`}
-                width={80}
-                height={80}
-                className="rounded-full border-2 border-white/50 mb-3"
-            />
-            <h3 className="font-bold text-base">{dep.nome}</h3>
-            <p className="text-sm text-gray-300">{`${dep.siglaPartido}-${dep.siglaUf}`}</p>
-            <Badge variant="secondary" className="mt-2 bg-blue-300/20 text-blue-100 text-xs">{dep.titulo}</Badge>
-        </CardContent>
-    </Card>
+const MemberInfo = ({ dep }: { dep: DeputadoMesa }) => (
+    <div className="flex flex-col items-center text-center">
+        <Image 
+            src={dep.urlFoto} 
+            alt={`Foto de ${dep.nome}`}
+            width={96}
+            height={96}
+            className="rounded-full border-2 border-white/50 mb-3"
+        />
+        <h3 className="font-bold text-lg">{dep.nome}</h3>
+        <p className="text-sm text-gray-300">{`${dep.siglaPartido}-${dep.siglaUf}`}</p>
+        <Badge variant="secondary" className="mt-2 bg-blue-300/20 text-blue-100 text-xs">{dep.titulo}</Badge>
+    </div>
 );
+
+const GroupCard = ({ title, members, icon: Icon }: { title: string, members: DeputadoMesa[], icon: React.ElementType }) => {
+    if (!members || members.length === 0) return null;
+    return (
+        <Card className="bg-black/30 backdrop-blur-md border-white/20 text-white w-full">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-2xl">
+                    <Icon className="text-blue-300" />
+                    {title}
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="flex flex-wrap justify-center gap-8">
+                    {members.map(dep => <MemberInfo key={dep.id} dep={dep} />)}
+                </div>
+            </CardContent>
+        </Card>
+    )
+};
+
 
 export default function DeputadosPage() {
   const mesaDiretora = getMesaDiretoraSimulada();
 
-  const presidente = mesaDiretora.find(m => m.titulo === 'Presidente');
+  const presidente = mesaDiretora.filter(m => m.titulo === 'Presidente');
   const vices = mesaDiretora.filter(m => m.titulo.includes('Vice-Presidente'));
   const secretarios = mesaDiretora.filter(m => m.titulo.includes('Secretári')); // Pega 'Secretário' e 'Secretária'
   const suplentes = mesaDiretora.filter(m => m.titulo.includes('Suplente'));
@@ -111,37 +128,11 @@ export default function DeputadosPage() {
         </div>
 
         {mesaDiretora.length > 0 ? (
-            <div className="flex flex-col items-center gap-y-8">
-                {/* Presidente */}
-                {presidente && (
-                    <div className="flex justify-center">
-                        <MemberCard dep={presidente} className="w-52" />
-                    </div>
-                )}
-                
-                {/* Vice-Presidentes */}
-                {vices.length > 0 && (
-                    <div className="flex justify-center gap-x-8">
-                        {vices.map(dep => <MemberCard key={dep.id} dep={dep} />)}
-                    </div>
-                )}
-
-                {/* Secretários */}
-                {secretarios.length > 0 && (
-                    <div className="flex justify-center flex-wrap gap-6">
-                        {secretarios.map(dep => <MemberCard key={dep.id} dep={dep} className="w-44"/>)}
-                    </div>
-                )}
-
-                {/* Suplentes */}
-                {suplentes.length > 0 && (
-                    <div className="w-full border-t border-white/20 mt-8 pt-8">
-                        <h2 className="text-2xl font-bold text-center mb-6">Suplentes</h2>
-                        <div className="flex justify-center flex-wrap gap-6">
-                            {suplentes.map(dep => <MemberCard key={dep.id} dep={dep} className="w-44" />)}
-                        </div>
-                    </div>
-                )}
+            <div className="flex flex-col items-center gap-8">
+               <GroupCard title="Presidente" members={presidente} icon={Crown} />
+               <GroupCard title="Vice-Presidentes" members={vices} icon={Users} />
+               <GroupCard title="Secretários" members={secretarios} icon={Users} />
+               <GroupCard title="Suplentes" members={suplentes} icon={Users} />
             </div>
         ) : (
             <div className="text-center text-gray-400">
