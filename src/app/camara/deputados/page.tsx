@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, User, Users, Shield, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 
 type DeputadoMesa = {
   id: number;
@@ -41,7 +40,7 @@ function getMesaDiretoraSimulada(): DeputadoMesa[] {
 }
 
 const MemberInfo = ({ dep }: { dep: DeputadoMesa }) => (
-    <div className="flex flex-col items-center text-center">
+    <div className="flex flex-col items-center text-center p-2">
         <Image 
             src={dep.urlFoto} 
             alt={`Foto de ${dep.nome}`}
@@ -60,13 +59,13 @@ const GroupCard = ({ title, members, icon: Icon }: { title: string, members: Dep
     return (
         <Card className="bg-black/30 backdrop-blur-md border-white/20 text-white w-full">
             <CardHeader>
-                <CardTitle className="flex items-center gap-3 text-2xl">
+                <CardTitle className="flex items-center justify-center gap-3 text-2xl">
                     <Icon className="text-blue-300" />
                     {title}
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-wrap justify-center gap-8">
+                <div className="flex flex-wrap justify-center gap-x-6 gap-y-4">
                     {members.map(dep => <MemberInfo key={dep.id} dep={dep} />)}
                 </div>
             </CardContent>
@@ -128,7 +127,7 @@ export default function DeputadosPage() {
         </div>
 
         {mesaDiretora.length > 0 ? (
-            <div className="flex flex-col items-center gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                <GroupCard title="Presidente" members={presidente} icon={Crown} />
                <GroupCard title="Vice-Presidentes" members={vices} icon={Users} />
                <GroupCard title="Secretários" members={secretarios} icon={Users} />
