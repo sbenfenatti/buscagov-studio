@@ -6,9 +6,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Users, Shield, Crown, Group, ClipboardList, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
 
 type Deputado = {
   id: number;
@@ -21,47 +19,90 @@ type Deputado = {
   dataFim: string | null;
 };
 
-const MemberCard = ({ dep }: { dep: Deputado }) => (
-    <div className="bg-black/40 border border-white/20 rounded-lg p-6 flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:bg-black/60 min-w-[200px]">
-        <Image 
-            src={dep.urlFoto} 
-            alt={`Foto de ${dep.nome}`}
-            width={100}
-            height={100}
-            className="rounded-full border-2 border-white/30 mb-4"
-        />
-        <h3 className="font-bold text-lg mb-2">{dep.nome}</h3>
-        <p className="text-sm text-gray-300 mb-3">{`${dep.siglaPartido}-${dep.siglaUf}`}</p>
-        <Badge variant="secondary" className="text-sm bg-blue-300/10 text-blue-200 px-3 py-1">{dep.titulo}</Badge>
-    </div>
-);
-
-const GroupAccordionItem = ({ title, icon: Icon, members, description }: { title: string, icon: React.ElementType, members: Deputado[], description: string }) => {
-    if (members.length === 0) return null;
-
-    return (
-        <AccordionItem value={title} className="border-b-0">
-            <AccordionTrigger className="bg-black/40 hover:bg-black/60 border border-white/20 rounded-lg p-6 flex justify-center items-center gap-3 text-white hover:no-underline [&[data-state=open]>svg]:text-blue-400">
-                <div className="flex items-center gap-3">
-                    <Icon className="h-8 w-8 text-white transition-colors" />
-                    <h3 className="text-xl font-bold">{title}</h3>
-                </div>
-            </AccordionTrigger>
-            <AccordionContent className="mt-4 text-white p-6 bg-black/30 rounded-lg border border-white/10">
-                <p className="text-gray-300 mb-6 text-center">{description}</p>
-                <div className="flex flex-wrap justify-center gap-6">
-                    {members.map(dep => <MemberCard key={dep.id} dep={dep} />)}
-                </div>
-            </AccordionContent>
-        </AccordionItem>
-    )
+type TimelineStep = {
+  key: 'secretaria' | 'vice' | 'presidencia' | 'suplencia';
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
 };
 
+const MemberCard = ({ dep }: { dep: Deputado }) => (
+  <div className="bg-black/40 border border-white/20 rounded-lg p-6 flex flex-col items-center text-center transform transition-all hover:scale-105 hover:bg-black/50 min-w-[220px] max-w-[280px]">
+    <Image 
+      src={dep.urlFoto} 
+      alt={`Foto de ${dep.nome}`}
+      width={100}
+      height={100}
+      className="rounded-full border-2 border-white/30 mb-4"
+    />
+    <h3 className="font-bold text-lg mb-2 text-white">{dep.nome}</h3>
+    <p className="text-sm text-gray-300 mb-3">{`${dep.siglaPartido}-${dep.siglaUf}`}</p>
+    <Badge variant="secondary" className="text-sm bg-blue-300/10 text-blue-200 px-3 py-1">
+      {dep.titulo}
+    </Badge>
+  </div>
+);
+
+const Timeline = ({ 
+  steps, 
+  activeStep, 
+  onStepClick 
+}: { 
+  steps: TimelineStep[]; 
+  activeStep: string; 
+  onStepClick: (step: string) => void; 
+}) => (
+  <div className="relative w-full max-w-4xl mx-auto mb-8">
+    {/* Linha horizontal */}
+    <div className="absolute top-6 left-0 right-0 h-0.5 bg-white/20" />
+    
+    <div className="flex justify-between items-start relative">
+      {steps.map((step, index) => {
+        const isActive = activeStep === step.key;
+        const Icon = step.icon;
+        
+        return (
+          <button
+            key={step.key}
+            onClick={() => onStepClick(step.key)}
+            className="flex flex-col items-center group cursor-pointer"
+          >
+            {/* Ponto da timeline */}
+            <div 
+              className={`w-12 h-12 rounded-full border-4 flex items-center justify-center transition-all relative z-10 ${
+                isActive 
+                  ? 'bg-white border-white text-black' 
+                  : 'bg-black border-white/40 text-white/70 group-hover:border-white/70 group-hover:text-white'
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+            </div>
+            
+            {/* Label */}
+            <span className={`mt-3 text-sm font-medium transition-colors ${
+              isActive ? 'text-white' : 'text-white/60 group-hover:text-white/90'
+            }`}>
+              {step.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+);
 
 export default function DeputadosPage() {
   const [mesaDiretora, setMesaDiretora] = useState<Deputado[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeStep, setActiveStep] = useState<'secretaria' | 'vice' | 'presidencia' | 'suplencia'>('secretaria');
+
+  const timelineSteps: TimelineStep[] = [
+    { key: 'secretaria', label: 'Secretaria', icon: ClipboardList, description: 'Responsável pela administração interna, atas das sessões e gestão de documentos.' },
+    { key: 'vice', label: 'Vice-Presidência', icon: Shield, description: 'Substitui o Presidente em suas ausências, garantindo a continuidade dos trabalhos.' },
+    { key: 'presidencia', label: 'Presidência', icon: Crown, description: 'Dirige as sessões da Câmara, representa a instituição e supervisiona todos os trabalhos.' },
+    { key: 'suplencia', label: 'Suplência', icon: Group, description: 'Substitui os Secretários quando necessário, garantindo o funcionamento das atividades.' }
+  ];
 
   useEffect(() => {
     async function getMesaDiretora() {
@@ -69,7 +110,6 @@ export default function DeputadosPage() {
         setLoading(true);
         setError(null);
         
-        // Agora usa nosso endpoint interno
         const response = await fetch('/api/camara/mesa-diretora?legislatura=57');
         
         if (!response.ok) {
@@ -82,7 +122,6 @@ export default function DeputadosPage() {
           throw new Error(result.error || 'Erro desconhecido');
         }
         
-        // Filtra apenas membros atuais (sem data fim)
         const membrosAtuais = result.data.filter((m: Deputado) => m.dataFim === null);
         setMesaDiretora(membrosAtuais);
         
@@ -97,31 +136,38 @@ export default function DeputadosPage() {
   }, []);
 
   // Filtros mais específicos para separar corretamente os cargos
-  const presidente = mesaDiretora.filter(m => 
-    m.titulo?.toLowerCase() === 'presidente' || 
-    (m.titulo?.toLowerCase().includes('presidente') && !m.titulo?.toLowerCase().includes('vice'))
-  );
-  
-  const vices = mesaDiretora.filter(m => 
-    m.titulo?.toLowerCase().includes('vice-presidente')
-  );
-  
-  const secretarios = mesaDiretora.filter(m => 
-    m.titulo?.toLowerCase().includes('secretári') && 
-    !m.titulo?.toLowerCase().includes('suplente')
-  );
-  
-  const suplentes = mesaDiretora.filter(m => 
-    m.titulo?.toLowerCase().includes('suplente')
-  );
+  const getMembrosPorCategoria = (categoria: 'secretaria' | 'vice' | 'presidencia' | 'suplencia'): Deputado[] => {
+    switch (categoria) {
+      case 'presidencia':
+        return mesaDiretora.filter(m => 
+          m.titulo?.toLowerCase() === 'presidente' || 
+          (m.titulo?.toLowerCase().includes('presidente') && !m.titulo?.toLowerCase().includes('vice'))
+        );
+      
+      case 'vice':
+        return mesaDiretora.filter(m => 
+          m.titulo?.toLowerCase().includes('vice-presidente')
+        );
+      
+      case 'secretaria':
+        return mesaDiretora.filter(m => 
+          m.titulo?.toLowerCase().includes('secretári') && 
+          !m.titulo?.toLowerCase().includes('suplente')
+        );
+      
+      case 'suplencia':
+        return mesaDiretora.filter(m => 
+          m.titulo?.toLowerCase().includes('suplente')
+        );
+      
+      default:
+        return [];
+    }
+  };
 
-  const groups = [
-    { title: "Presidência", icon: Crown, members: presidente, description: "Dirige as sessões da Câmara, representa a instituição e supervisiona todos os trabalhos legislativos e administrativos." },
-    { title: "Vice-Presidência", icon: Shield, members: vices, description: "Substitui o Presidente em suas ausências ou impedimentos, garantindo a continuidade dos trabalhos da Casa." },
-    { title: "Secretaria", icon: ClipboardList, members: secretarios, description: "Responsável pela administração interna, como a ata das sessões, a numeração de projetos e a gestão de documentos." },
-    { title: "Suplência", icon: Group, members: suplentes, description: "Substituem os Secretários em suas ausências, garantindo o quórum e o funcionamento das atividades administrativas." },
-  ]
-  
+  const membrosAtivos = getMembrosPorCategoria(activeStep);
+  const stepAtivo = timelineSteps.find(s => s.key === activeStep);
+
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden bg-black">
       <div className="absolute inset-0 bg-camara-background-image bg-cover bg-center opacity-30" />
@@ -162,8 +208,13 @@ export default function DeputadosPage() {
 
       <main className="relative z-10 container mx-auto px-6 py-12 text-white">
          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold flex items-center justify-center gap-4"><Shield size={36} /> Mesa Diretora</h1>
-            <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">A Mesa Diretora é o órgão responsável pela direção dos trabalhos legislativos e dos serviços administrativos da Câmara. Clique em um cargo para ver seus membros e atribuições.</p>
+            <h1 className="text-4xl font-bold flex items-center justify-center gap-4">
+              <Shield size={36} /> Mesa Diretora
+            </h1>
+            <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">
+              A Mesa Diretora é o órgão responsável pela direção dos trabalhos legislativos e dos serviços administrativos da Câmara. 
+              Clique nos pontos da linha do tempo para explorar cada categoria.
+            </p>
         </div>
         
         {loading && (
@@ -180,26 +231,38 @@ export default function DeputadosPage() {
         )}
 
         {!loading && !error && (
-            <div className="relative w-full max-w-6xl mx-auto">
-                <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-white/20 -translate-y-1/2" />
-                <Accordion type="single" collapsible className="relative flex flex-col md:flex-row justify-between items-start gap-8 md:gap-0">
-                    {groups.map((group, index) => (
-                        <div key={group.title} className="w-full md:w-auto flex flex-col items-center z-10">
-                            <div className="w-full md:w-auto flex flex-col items-center">
-                                {index !== 0 && <div className="block md:hidden w-0.5 h-8 bg-white/20" />}
-                                <GroupAccordionItem 
-                                    key={group.title}
-                                    title={group.title}
-                                    icon={group.icon}
-                                    members={group.members}
-                                    description={group.description}
-                                />
-                                {index !== groups.length - 1 && <div className="block md:hidden w-0.5 h-8 bg-white/20" />}
-                            </div>
-                        </div>
-                    ))}
-                </Accordion>
-            </div>
+          <div className="space-y-8">
+            {/* Timeline Horizontal */}
+            <Timeline 
+              steps={timelineSteps}
+              activeStep={activeStep}
+              onStepClick={setActiveStep}
+            />
+            
+            {/* Descrição da categoria ativa */}
+            {stepAtivo && (
+              <div className="text-center">
+                <p className="text-gray-300 max-w-2xl mx-auto">
+                  {stepAtivo.description}
+                </p>
+              </div>
+            )}
+            
+            {/* Cards dos membros */}
+            {membrosAtivos.length > 0 ? (
+              <div className="flex flex-wrap justify-center gap-6">
+                {membrosAtivos.map(dep => (
+                  <MemberCard key={dep.id} dep={dep} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-400">
+                  Nenhum membro encontrado para esta categoria.
+                </p>
+              </div>
+            )}
+          </div>
         )}
       </main>
     </div>
