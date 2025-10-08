@@ -77,9 +77,9 @@ export default async function DeputadosPage() {
   const mesaDiretora = await getMesaDiretora();
 
   const presidente = mesaDiretora.find(m => m.titulo === 'Presidente');
-  const vices = mesaDiretora.filter(m => m.titulo.includes('Vice-Presidente'));
-  const secretarios = mesaDiretora.filter(m => m.titulo.includes('Secretári')); // Pega 'Secretário' e 'Secretária'
-  const suplentes = mesaDiretora.filter(m => m.titulo.includes('Suplente'));
+  const vices = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Vice-Presidente'));
+  const secretarios = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Secretári')); // Pega 'Secretário' e 'Secretária'
+  const suplentes = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Suplente'));
 
   return (
     <div className="relative w-full min-h-screen overflow-auto">
