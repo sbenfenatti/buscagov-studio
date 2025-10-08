@@ -88,7 +88,7 @@ const MemberCard = ({ dep }: { dep: Deputado }) => (
   </div>
 );
 
-// Componente do Chart Semicircular do Plenário
+// Componente do Chart Semicircular do Plenário - CORRIGIDO
 const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
   deputados: DeputadoPlenario[];
   hoveredPartido: string | null;
@@ -108,13 +108,17 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
     return partidosOrdenados;
   }, [deputados]);
 
-  // Distribui deputados em posições semicirculares
+  // Distribui deputados em posições semicirculares - GEOMETRIA CORRIGIDA
   const posicoes = useMemo(() => {
     const totalDeputados = deputados.length;
-    const raio = 200; // Raio base
-    const numeroFileiras = 8; // Número de arcos concêntricos
-    const anguloInicio = Math.PI * 0.1; // 18 graus
-    const anguloFim = Math.PI * 0.9; // 162 graus (semicírculo)
+    const numeroFileiras = 9;
+    const raioBase = 120;
+    const espacamentoFileira = 18;
+    
+    // Ângulos para semicírculo côncavo voltado para cima
+    const anguloInicio = Math.PI; // 180° (esquerda)
+    const anguloFim = 0; // 0° (direita)
+    const anguloTotal = Math.PI; // 180° total
     
     const posicoesList: Array<{
       x: number;
@@ -123,26 +127,66 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
       cor: string;
     }> = [];
     
+    // Calcula cadeiras por fileira baseado no comprimento do arco
+    const calcularCadeirasFileira = (fileira: number): number => {
+      const raio = raioBase + fileira * espacamentoFileira;
+      const comprimentoArco = raio * anguloTotal;
+      const espacamentoCadeira = 8; // Espaçamento entre cadeiras
+      return Math.floor(comprimentoArco / espacamentoCadeira);
+    };
+    
+    // Calcula total de cadeiras disponíveis
+    const totalCadeirasDisponiveis = Array.from({ length: numeroFileiras }, (_, i) => 
+      calcularCadeirasFileira(i)
+    ).reduce((sum, count) => sum + count, 0);
+    
+    // Distribui deputados proporcionalmente
     let deputadoIndex = 0;
     
-    // Para cada partido, calcular posições em ordem
-    partidosData.forEach(({ sigla, quantidade, cor }) => {
-      for (let i = 0; i < quantidade; i++) {
-        // Distribui deputados em espiral pelos arcos
-        const fileira = Math.floor(deputadoIndex / 64) % numeroFileiras;
-        const posicaoNaFileira = deputadoIndex % 64;
-        const deputadosPorFileira = Math.min(64, totalDeputados - fileira * 64);
+    for (let fileira = 0; fileira < numeroFileiras; fileira++) {
+      const cadeirasNestaFileira = calcularCadeirasFileira(fileira);
+      const raio = raioBase + fileira * espacamentoFileira;
+      
+      // Quantos deputados colocar nesta fileira
+      const deputadosNestaFileira = Math.min(
+        cadeirasNestaFileira,
+        Math.ceil((totalDeputados - deputadoIndex) * cadeirasNestaFileira / 
+          Array.from({ length: numeroFileiras - fileira }, (_, i) => 
+            calcularCadeirasFileira(fileira + i)
+          ).reduce((sum, count) => sum + count, 0))
+      );
+      
+      for (let cadeira = 0; cadeira < deputadosNestaFileira && deputadoIndex < totalDeputados; cadeira++) {
+        // Ângulo para esta cadeira (de 180° a 0°)
+        const progresso = cadeira / Math.max(1, deputadosNestaFileira - 1);
+        const angulo = anguloInicio - (progresso * anguloTotal); // De π para 0
         
-        const raioAtual = raio + (fileira * 25);
-        const angulo = anguloInicio + (anguloFim - anguloInicio) * (posicaoNaFileira / Math.max(1, deputadosPorFileira - 1));
+        // Coordenadas (semicírculo côncavo para cima)
+        const x = Math.cos(angulo) * raio;
+        const y = Math.sin(angulo) * raio; // SIN positivo = côncavo para cima
         
-        const x = Math.cos(angulo) * raioAtual;
-        const y = Math.sin(angulo) * raioAtual * 0.6; // Achatamento para parecer mais semicírculo
+        // Encontra o partido do deputado atual
+        let partidoAtual = '';
+        let contadorPartidos = 0;
         
-        posicoesList.push({ x, y, partido: sigla, cor });
+        for (const { sigla, quantidade } of partidosData) {
+          if (deputadoIndex < contadorPartidos + quantidade) {
+            partidoAtual = sigla;
+            break;
+          }
+          contadorPartidos += quantidade;
+        }
+        
+        posicoesList.push({
+          x,
+          y,
+          partido: partidoAtual,
+          cor: gerarCorPartido(partidoAtual)
+        });
+        
         deputadoIndex++;
       }
-    });
+    }
     
     return posicoesList;
   }, [deputados, partidosData]);
@@ -152,13 +196,14 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
 
   return (
     <div 
-      className="relative w-full max-w-4xl mx-auto h-96 flex items-end justify-center"
+      className="relative w-full max-w-5xl mx-auto h-80 flex items-center justify-center"
       onMouseLeave={() => setHoveredPartido(null)}
     >
-      {/* SVG do semicírculo */}
+      {/* SVG do semicírculo côncavo */}
       <svg 
-        viewBox="-300 -50 600 300" 
-        className="w-full h-full overflow-visible"
+        viewBox="-350 -50 700 350" 
+        className="w-full h-full"
+        aria-label="Plenário da Câmara dos Deputados"
       >
         {posicoes.map((pos, index) => {
           const isHovered = hoveredPartido === pos.partido;
@@ -168,41 +213,42 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
             <circle
               key={index}
               cx={pos.x}
-              cy={-pos.y} // Negativo para inverter o Y (SVG tem origem no topo)
-              r={isHovered ? "4" : "3"}
+              cy={-pos.y} // Negativo para inverter o SVG (origem no topo)
+              r={isHovered ? "5" : "3.5"}
               fill={pos.cor}
               className={cn(
                 "transition-all duration-200 cursor-pointer",
-                isAnotherHovered ? "opacity-20" : "opacity-100",
-                isHovered ? "drop-shadow-lg" : ""
+                isAnotherHovered ? "opacity-25" : "opacity-100",
+                isHovered ? "drop-shadow-lg scale-110" : ""
               )}
               onMouseEnter={() => setHoveredPartido(pos.partido)}
+              aria-label={`Deputado do partido ${pos.partido}`}
             />
           );
         })}
       </svg>
       
-      {/* Legenda Central */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="text-center">
+      {/* Legenda Central - Posicionada no centro da base */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-none">
+        <div className="text-center bg-black/50 backdrop-blur-sm rounded-lg px-4 py-3 border border-white/20">
           {hoveredPartido && partidoInfo ? (
             <>
               <div 
-                className="text-4xl font-bold transition-all duration-300"
+                className="text-3xl font-bold transition-all duration-300"
                 style={{ color: partidoInfo.cor }}
               >
                 {hoveredPartido}
               </div>
-              <div className="text-xl text-white mt-1">
+              <div className="text-lg text-white mt-1">
                 {partidoInfo.quantidade} deputados
               </div>
             </>
           ) : (
             <>
-              <div className="text-4xl font-bold text-white">
+              <div className="text-3xl font-bold text-white">
                 🏛️ {totalDeputados}
               </div>
-              <div className="text-xl text-gray-300 mt-1">
+              <div className="text-lg text-gray-300 mt-1">
                 Deputados
               </div>
               <div className="text-sm text-gray-400 mt-1">
