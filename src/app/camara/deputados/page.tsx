@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -69,16 +68,24 @@ export default function DeputadosPage() {
       try {
         setLoading(true);
         setError(null);
-        // Fetch from the external API directly on the client
-        const response = await fetch('https://dados.camara.leg.br/api/v2/legislaturas/57/mesa');
+        
+        // Agora usa nosso endpoint interno
+        const response = await fetch('/api/camara/mesa-diretora?legislatura=57');
         
         if (!response.ok) {
           throw new Error(`Falha na requisição: ${response.statusText}`);
         }
         
-        const data = await response.json();
-        const membrosAtuais = data.dados.filter((m: Deputado) => m.dataFim === null);
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Erro desconhecido');
+        }
+        
+        // Filtra apenas membros atuais (sem data fim)
+        const membrosAtuais = result.data.filter((m: Deputado) => m.dataFim === null);
         setMesaDiretora(membrosAtuais);
+        
       } catch (e: any) {
         console.error('Erro ao buscar dados da Mesa Diretora:', e);
         setError('Não foi possível carregar os dados da Mesa Diretora. Tente novamente mais tarde.');
