@@ -64,8 +64,8 @@ const MemberInfo = ({ dep }: { dep: DeputadoMesa }) => (
 const GroupAccordionItem = ({ value, title, description, members, icon: Icon }: { value: string, title: string, description: string, members: DeputadoMesa[], icon: React.ElementType }) => {
     if (!members || members.length === 0) return null;
     return (
-        <AccordionItem value={value} className="bg-black/30 backdrop-blur-md border-white/20 text-white rounded-lg px-6 mb-4">
-            <AccordionTrigger className="hover:no-underline">
+        <AccordionItem value={value} className="bg-black/30 backdrop-blur-md border-white/20 text-white rounded-lg mb-4">
+            <AccordionTrigger className="hover:no-underline p-6">
                 <div className="flex items-center gap-4">
                     <Icon className="text-blue-300 h-8 w-8" />
                     <div>
@@ -75,7 +75,7 @@ const GroupAccordionItem = ({ value, title, description, members, icon: Icon }: 
                 </div>
                  <ChevronDown className="h-6 w-6 shrink-0 transition-transform duration-200 text-blue-300" />
             </AccordionTrigger>
-            <AccordionContent>
+            <AccordionContent className="p-6 pt-0">
                 <div className="flex flex-wrap justify-center gap-x-6 gap-y-4 pt-4 border-t border-white/20">
                     {members.map(dep => <MemberInfo key={dep.id} dep={dep} />)}
                 </div>
@@ -138,35 +138,37 @@ export default function DeputadosPage() {
         </div>
 
         {mesaDiretora.length > 0 ? (
-            <Accordion type="single" collapsible className="w-full max-w-4xl mx-auto">
-                <GroupAccordionItem 
-                    value="presidente"
-                    title="Presidência"
-                    description="Representa a Câmara e comanda as sessões."
-                    members={presidente}
-                    icon={Crown}
-                />
-                <GroupAccordionItem 
-                    value="vices"
-                    title="Vice-Presidência"
-                    description="Substituem o presidente em suas ausências."
-                    members={vices}
-                    icon={Users}
-                />
-                <GroupAccordionItem 
-                    value="secretarios"
-                    title="Secretaria"
-                    description="Controlam a ata e a frequência dos deputados."
-                    members={secretarios}
-                    icon={User}
-                />
-                <GroupAccordionItem 
-                    value="suplentes"
-                    title="Suplência"
-                    description="Substituem os secretários em suas ausências."
-                    members={suplentes}
-                    icon={Users}
-                />
+             <Accordion type="single" collapsible className="w-full max-w-6xl mx-auto">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <GroupAccordionItem 
+                        value="presidente"
+                        title="Presidência"
+                        description="Comanda as sessões."
+                        members={presidente}
+                        icon={Crown}
+                    />
+                    <GroupAccordionItem 
+                        value="vices"
+                        title="Vice-Presidência"
+                        description="Substituem o presidente."
+                        members={vices}
+                        icon={Users}
+                    />
+                    <GroupAccordionItem 
+                        value="secretarios"
+                        title="Secretaria"
+                        description="Controlam atas e frequência."
+                        members={secretarios}
+                        icon={User}
+                    />
+                    <GroupAccordionItem 
+                        value="suplentes"
+                        title="Suplência"
+                        description="Substituem os secretários."
+                        members={suplentes}
+                        icon={Users}
+                    />
+                </div>
             </Accordion>
         ) : (
             <div className="text-center text-gray-400">
