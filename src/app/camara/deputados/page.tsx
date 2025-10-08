@@ -17,42 +17,27 @@ type DeputadoMesa = {
   titulo: string; // O cargo, ex: 'Presidente'
 };
 
-// Função para buscar e processar os dados da API
-async function getMesaDiretora(): Promise<DeputadoMesa[]> {
-  try {
-    const response = await fetch('https://dadosabertos.camara.leg.br/api/v2/legislaturas/57/mesa', {
-        next: { revalidate: 3600 } // Revalida a cada hora
-    });
-    if (!response.ok) {
-        throw new Error('Falha ao buscar dados da API');
-    }
-    const data = await response.json();
-    
-    // Filtra para manter apenas os membros atuais (sem data de fim)
-    const membrosAtuais = data.dados.filter((membro: any) => membro.dataFim === null);
-
-    const deputadosMesa: DeputadoMesa[] = membrosAtuais.map((dep: any) => ({
-      id: dep.id,
-      nome: dep.nome,
-      siglaPartido: dep.siglaPartido,
-      siglaUf: dep.siglaUf,
-      urlFoto: dep.urlFoto,
-      titulo: dep.cargo,
-    }));
-    
-    const ordem = [
-        'Presidente', '1º Vice-Presidente', '2º Vice-Presidente',
-        '1º Secretário', '2º Secretária', '3º Secretário', '4º Secretário',
-        '1º Suplente', '2º Suplente', '3º Suplente', '4º Suplente'
+// Função para retornar dados simulados da Mesa Diretora
+function getMesaDiretoraSimulada(): DeputadoMesa[] {
+    const deputados: Omit<DeputadoMesa, 'id' | 'urlFoto'>[] = [
+        { nome: 'Arthur Lira', siglaPartido: 'PP', siglaUf: 'AL', titulo: 'Presidente' },
+        { nome: 'Marcos Pereira', siglaPartido: 'Republicanos', siglaUf: 'SP', titulo: '1º Vice-Presidente' },
+        { nome: 'Sóstenes Cavalcante', siglaPartido: 'PL', siglaUf: 'RJ', titulo: '2º Vice-Presidente' },
+        { nome: 'Luciano Bivar', siglaPartido: 'União', siglaUf: 'PE', titulo: '1º Secretário' },
+        { nome: 'Maria do Rosário', siglaPartido: 'PT', siglaUf: 'RS', titulo: '2º Secretária' },
+        { nome: 'Júlio Cesar', siglaPartido: 'PSD', siglaUf: 'PI', titulo: '3º Secretário' },
+        { nome: 'Lúcio Mosquini', siglaPartido: 'MDB', siglaUf: 'RO', titulo: '4º Secretário' },
+        { nome: 'Gilberto Nascimento', siglaPartido: 'PSC', siglaUf: 'SP', titulo: '1º Suplente' },
+        { nome: 'Jeferson Rodrigues', siglaPartido: 'Republicanos', siglaUf: 'GO', titulo: '2º Suplente' },
+        { nome: 'Roberto Monteiro', siglaPartido: 'PL', siglaUf: 'RJ', titulo: '3º Suplente' },
+        { nome: 'André Ferreira', siglaPartido: 'PL', siglaUf: 'PE', titulo: '4º Suplente' },
     ];
 
-    // Ordena os deputados de acordo com a hierarquia da mesa
-    return deputadosMesa.sort((a, b) => ordem.indexOf(a.titulo) - ordem.indexOf(b.titulo));
-
-  } catch (error) {
-    console.error("Erro ao buscar dados da Mesa Diretora:", error);
-    return []; // Retorna um array vazio em caso de erro
-  }
+    return deputados.map((dep, index) => ({
+        ...dep,
+        id: 204554 + index, // Ids fictícios
+        urlFoto: `https://www.camara.leg.br/internet/deputado/bandep/${204554 + index}.jpg`,
+    }));
 }
 
 
@@ -73,13 +58,13 @@ const MemberCard = ({ dep, className }: { dep: DeputadoMesa, className?: string 
     </Card>
 );
 
-export default async function DeputadosPage() {
-  const mesaDiretora = await getMesaDiretora();
+export default function DeputadosPage() {
+  const mesaDiretora = getMesaDiretoraSimulada();
 
   const presidente = mesaDiretora.find(m => m.titulo === 'Presidente');
-  const vices = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Vice-Presidente'));
-  const secretarios = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Secretári')); // Pega 'Secretário' e 'Secretária'
-  const suplentes = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Suplente'));
+  const vices = mesaDiretora.filter(m => m.titulo.includes('Vice-Presidente'));
+  const secretarios = mesaDiretora.filter(m => m.titulo.includes('Secretári')); // Pega 'Secretário' e 'Secretária'
+  const suplentes = mesaDiretora.filter(m => m.titulo.includes('Suplente'));
 
   return (
     <div className="relative w-full min-h-screen overflow-auto">
