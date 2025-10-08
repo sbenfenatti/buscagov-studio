@@ -4,7 +4,7 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Users, TrendingUp, Wallet, BookOpen, GraduationCap, BarChart3, Scale, Landmark, Hospital, Mic, Shield, Building, Leaf, Users2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // --- Data Definitions ---
@@ -13,16 +13,16 @@ const totalDeputados = 513;
 const getDemographicData = () => {
   const data = [];
   for (let i = 1; i <= totalDeputados; i++) {
-    // Gênero: 90 mulheres (17.5%), 423 homens
-    const genero = i <= 90 ? 'Feminino' : 'Masculino';
+    // Gênero: 90 Deputadas, 423 Deputados
+    const genero = i <= 90 ? 'Deputadas' : 'Deputados';
 
-    // Idade: 135 (21-40), 270 (41-60), 108 (61+)
+    // Idade: 135 (21-40), 270 (41-60), 108 (61-87)
     let idade;
-    if (i <= 108) idade = '61+ anos';
+    if (i <= 108) idade = '61-87 anos';
     else if (i <= 108 + 270) idade = '41-60 anos';
     else idade = '21-40 anos';
 
-    // Patrimônio Simplificado: 17 (sem), 31 (até 100k), 101 (100k-500k), 183 (500k-2M), 80 (>5M), (101 de 2-5M ignorados por enquanto)
+    // Patrimônio Simplificado: 17 (sem), 31 (até 100k), 101 (100k-500k), 183 (500k-2M), 80 (>5M)
     let patrimonio;
      if (i <= 80) patrimonio = 'Acima de R$5 milhões';
     else if (i <= 80 + 183) patrimonio = 'R$500 mil a R$2 milhões';
@@ -62,51 +62,54 @@ const getDemographicData = () => {
 };
 
 
-// --- Color Mappings ---
-const colorConfig = {
+// --- Color and Icon Mappings ---
+const config = {
   genero: {
-    'Masculino': 'hsl(210 80% 55%)',
-    'Feminino': 'hsl(340 80% 60%)',
+    'Deputados': { color: 'hsl(210 80% 55%)', icon: Users, count: 423 },
+    'Deputadas': { color: 'hsl(340 80% 60%)', icon: Users, count: 90 },
   },
   idade: {
-    '61+ anos': 'hsl(280 70% 60%)',
-    '41-60 anos': 'hsl(45 90% 55%)',
-    '21-40 anos': 'hsl(170 80% 45%)',
+    '61-87 anos': { color: 'hsl(280 70% 60%)', icon: TrendingUp, count: 108 },
+    '41-60 anos': { color: 'hsl(45 90% 55%)', icon: TrendingUp, count: 270 },
+    '21-40 anos': { color: 'hsl(170 80% 45%)', icon: TrendingUp, count: 135 },
   },
   patrimonio: {
-    'Acima de R$5 milhões': 'hsl(120 80% 40%)',
-    'R$500 mil a R$2 milhões': 'hsl(100 60% 50%)',
-    'R$100 mil a R$500 mil': 'hsl(80 60% 60%)',
-    'Até R$100 mil': 'hsl(60 70% 70%)',
-    'Sem patrimônio declarado': 'hsl(0 0% 80%)',
+    'Acima de R$5 milhões': { color: 'hsl(120 80% 40%)', icon: Wallet, count: 80 },
+    'R$500 mil a R$2 milhões': { color: 'hsl(100 70% 60%)', icon: Wallet, count: 183 },
+    'R$100 mil a R$500 mil': { color: 'hsl(80 80% 60%)', icon: Wallet, count: 101 },
+    'Até R$100 mil': { color: 'hsl(60 100% 75%)', icon: Wallet, count: 31 },
+    'Sem patrimônio declarado': { color: 'hsl(0 0% 80%)', icon: Wallet, count: 17 },
   },
   raca: {
-    'Branca': 'hsl(35 100% 90%)',
-    'Parda': 'hsl(30 40% 50%)',
-    'Preta': 'hsl(0 0% 20%)',
-    'Amarela': 'hsl(60 100% 70%)',
-    'Indígena': 'hsl(10 70% 50%)',
-    'Não Informado': 'hsl(210 10% 85%)',
+    'Branca': { color: 'hsl(35 100% 90%)', icon: Users2, count: 370 },
+    'Parda': { color: 'hsl(30 40% 50%)', icon: Users2, count: 107 },
+    'Preta': { color: 'hsl(0 0% 20%)', icon: Users2, count: 27 },
+    'Amarela': { color: 'hsl(60 100% 70%)', icon: Users2, count: 3 },
+    'Indígena': { color: 'hsl(10 70% 50%)', icon: Users2, count: 5 },
+    'Não Informado': { color: 'hsl(210 10% 85%)', icon: Users2, count: 1 },
   },
   escolaridade: {
-    'Pós-graduação': 'hsl(310 80% 50%)',
-    'Superior Completo': 'hsl(260 70% 65%)',
-    'Ensino Médio': 'hsl(210 60% 75%)',
+    'Pós-graduação': { color: 'hsl(310 80% 50%)', icon: GraduationCap, count: 13 },
+    'Superior Completo': { color: 'hsl(260 70% 65%)', icon: GraduationCap, count: 421 },
+    'Ensino Médio': { color: 'hsl(210 60% 75%)', icon: GraduationCap, count: 79 },
   },
   mandatos: {
-    '5 ou mais': 'hsl(360 90% 45%)',
-    '4º Mandato': 'hsl(25 85% 55%)',
-    '3º Mandato': 'hsl(50 90% 60%)',
-    '2º Mandato': 'hsl(180 60% 60%)',
-    '1º Mandato': 'hsl(200 80% 80%)',
+    '5 ou mais': { color: 'hsl(360 90% 45%)', icon: BarChart3, count: 55 },
+    '4º Mandato': { color: 'hsl(25 85% 55%)', icon: BarChart3, count: 42 },
+    '3º Mandato': { color: 'hsl(50 90% 60%)', icon: BarChart3, count: 70 },
+    '2º Mandato': { color: 'hsl(180 60% 60%)', icon: BarChart3, count: 118 },
+    '1º Mandato': { color: 'hsl(200 80% 80%)', icon: BarChart3, count: 228 },
   }
 };
 
-type FilterType = keyof typeof colorConfig;
+type FilterType = keyof typeof config;
 
 
 // --- Waffle Chart Component ---
 const WaffleChart = ({ data, activeFilter, hoveredCategory, setHoveredCategory }: { data: any[], activeFilter: FilterType, hoveredCategory: string | null, setHoveredCategory: (category: string | null) => void }) => {
+  const HoverIcon = hoveredCategory ? config[activeFilter][hoveredCategory]?.icon : null;
+  const count = hoveredCategory ? config[activeFilter][hoveredCategory]?.count : 0;
+    
   return (
     <div 
         className="relative"
@@ -115,7 +118,7 @@ const WaffleChart = ({ data, activeFilter, hoveredCategory, setHoveredCategory }
         <div className="grid grid-cols-27 grid-rows-19 gap-1.5 w-full max-w-4xl mx-auto">
             {data.map(deputado => {
                 const category = deputado[activeFilter];
-                const color = colorConfig[activeFilter][category];
+                const color = config[activeFilter][category].color;
                 const isHovered = hoveredCategory === category;
                 const isAnotherHovered = hoveredCategory !== null && !isHovered;
 
@@ -135,8 +138,9 @@ const WaffleChart = ({ data, activeFilter, hoveredCategory, setHoveredCategory }
         </div>
         {hoveredCategory && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="bg-black/70 text-white text-2xl sm:text-3xl md:text-4xl font-bold p-4 md:p-6 rounded-lg text-center shadow-lg">
-                    {hoveredCategory}
+                <div className="bg-black/70 text-white text-2xl sm:text-3xl md:text-4xl font-bold p-4 md:p-6 rounded-lg text-center shadow-lg flex items-center gap-4">
+                    {HoverIcon && <HoverIcon className="h-8 w-8 sm:h-10 sm:w-10" />}
+                    <span>{hoveredCategory} ({count})</span>
                 </div>
             </div>
         )}
@@ -155,7 +159,7 @@ const WaffleChart = ({ data, activeFilter, hoveredCategory, setHoveredCategory }
 
 // --- Legend Component ---
 const Legend = ({ activeFilter }: { activeFilter: FilterType }) => {
-  const items = colorConfig[activeFilter];
+  const items = config[activeFilter];
   const orderedItems = Object.entries(items).sort(([keyA], [keyB]) => {
       const order = Object.keys(items);
       return order.indexOf(keyA) - order.indexOf(keyB);
@@ -163,7 +167,7 @@ const Legend = ({ activeFilter }: { activeFilter: FilterType }) => {
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8">
-      {orderedItems.map(([key, color]) => (
+      {orderedItems.map(([key, { color }]) => (
         <div key={key} className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
           <span className="text-xs text-gray-300">{key}</span>
