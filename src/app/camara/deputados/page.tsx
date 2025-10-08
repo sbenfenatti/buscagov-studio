@@ -95,7 +95,7 @@ export default function DeputadosPage() {
   const [mesaDiretora, setMesaDiretora] = useState<Deputado[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeStep, setActiveStep] = useState<'secretaria' | 'vice' | 'presidencia' | 'suplencia'>('secretaria');
+  const [activeStep, setActiveStep] = useState<'secretaria' | 'vice' | 'presidencia' | 'suplencia'>('presidencia');
 
   const timelineSteps: TimelineStep[] = [
     { key: 'secretaria', label: 'Secretaria', icon: ClipboardList, description: 'Responsável pela administração interna, atas das sessões e gestão de documentos.' },
