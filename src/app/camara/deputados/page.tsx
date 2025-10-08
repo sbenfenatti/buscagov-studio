@@ -63,33 +63,37 @@ const MemberInfo = ({ dep }: { dep: DeputadoMesa }) => (
     </div>
 );
 
-const TimelineItem = ({ value, title, description, members, icon: Icon, side }: { value: string, title: string, description: string, members: DeputadoMesa[], icon: React.ElementType, side: 'left' | 'right' }) => {
-    if (!members || members.length === 0) return null;
 
-    return (
-        <div className="relative w-full">
-            {/* The Circle on the timeline */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-8 bg-blue-300 rounded-full border-4 border-black/50 flex items-center justify-center">
-                 <Icon className="text-black h-4 w-4" />
-            </div>
-
-            <AccordionItem value={value} className={cn(
-                "relative border-none w-[calc(50%-2rem)]",
-                side === 'left' ? 'mr-auto' : 'ml-auto'
-            )}>
-                 <AccordionTrigger className="hover:no-underline bg-black/30 backdrop-blur-md border border-white/20 text-white rounded-lg p-6 flex flex-col items-center gap-2 text-center">
-                    <h3 className="text-xl font-bold">{title}</h3>
-                    <p className="text-sm text-gray-300 font-normal">{description}</p>
-                    <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200 text-blue-300 mt-2" />
-                </AccordionTrigger>
-                <AccordionContent className="mt-4 bg-black/50 backdrop-blur-sm rounded-lg p-4">
-                    <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
-                        {members.map(dep => <MemberInfo key={dep.id} dep={dep} />)}
-                    </div>
-                </AccordionContent>
-            </AccordionItem>
+const TimelineItem = ({ value, title, description, members, icon: Icon, details }: { value: string, title: string, description: string, members: DeputadoMesa[], icon: React.ElementType, details: string }) => {
+  return (
+    <AccordionItem value={value} className="flex-1 border-none relative group">
+      {/* Node and Line */}
+      <div className="flex flex-col items-center">
+        {/* Top vertical line */}
+        <div className="w-0.5 h-8 bg-white/20"></div>
+        {/* Circle Node */}
+        <div className="w-12 h-12 bg-blue-300 rounded-full border-4 border-black/50 flex items-center justify-center text-black z-10">
+          <Icon className="h-6 w-6" />
         </div>
-    )
+      </div>
+
+      <AccordionTrigger className="hover:no-underline flex flex-col text-center p-4">
+        <h3 className="text-lg font-bold mt-3">{title}</h3>
+        <p className="text-sm text-gray-400 font-normal">{description}</p>
+        <ChevronDown className="h-5 w-5 shrink-0 transition-transform duration-200 text-blue-300 mt-2" />
+      </AccordionTrigger>
+
+      <AccordionContent className="absolute left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-2xl mt-4 z-20">
+        <div className="bg-black/50 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+            <h4 className="font-bold text-lg mb-2">{title}</h4>
+            <p className="text-gray-300 mb-4 text-sm">{details}</p>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+                {members.map(dep => <MemberInfo key={dep.id} dep={dep} />)}
+            </div>
+        </div>
+      </AccordionContent>
+    </AccordionItem>
+  );
 };
 
 
@@ -102,19 +106,19 @@ export default function DeputadosPage() {
   const suplentes = mesaDiretora.filter(m => m.titulo.includes('Suplente'));
   
   const timelineItems = [
-    { value: "presidente", title: "Presidência", description: "Comanda as sessões.", members: presidente, icon: Crown, side: 'left' as const },
-    { value: "vices", title: "Vice-Presidência", description: "Substituem o presidente.", members: vices, icon: Users, side: 'right' as const },
-    { value: "secretarios", title: "Secretaria", description: "Controlam atas e frequência.", members: secretarios, icon: User, side: 'left' as const },
-    { value: "suplentes", title: "Suplência", description: "Substituem os secretários.", members: suplentes, icon: Users, side: 'right' as const },
+    { value: "presidente", title: "Presidência", description: "Comanda", members: presidente, icon: Crown, details: "A Presidência é o cargo máximo da Mesa Diretora, responsável por dirigir as sessões plenárias, manter a ordem, e representar a Câmara dos Deputados perante os outros Poderes e a sociedade." },
+    { value: "vices", title: "Vice-Presidência", description: "Substitui", members: vices, icon: Users, details: "Os Vice-Presidentes substituem o Presidente em suas ausências ou impedimentos, garantindo a continuidade dos trabalhos legislativos e auxiliando na gestão da Casa." },
+    { value: "secretarios", title: "Secretaria", description: "Administra", members: secretarios, icon: User, details: "A Secretaria é responsável por funções administrativas cruciais, como a leitura de documentos em plenário, o controle da lista de presença, a apuração de votos e a supervisão da redação das atas." },
+    { value: "suplentes", title: "Suplência", description: "Cobre ausências", members: suplentes, icon: Users, details: "Os Suplentes de Secretários são convocados para substituir os secretários titulares em suas ausências, garantindo que as funções administrativas da Mesa Diretora nunca fiquem vagas." },
   ];
 
 
   return (
-    <div className="relative w-full min-h-screen overflow-auto">
+    <div className="relative w-full min-h-screen overflow-x-hidden">
       <div className="absolute inset-0 bg-camara-background-image bg-cover bg-center" />
       <div className="absolute inset-0 bg-black/70" />
       
-      <header className="sticky top-0 z-20 bg-transparent">
+      <header className="sticky top-0 z-30 bg-transparent">
         <div className="bg-black/20 backdrop-blur-md">
           <div className="container mx-auto px-6 py-4 flex items-center justify-between">
              <div className="flex items-center">
@@ -150,14 +154,14 @@ export default function DeputadosPage() {
       <main className="relative z-10 container mx-auto px-6 py-12 text-white">
         <div className="text-center mb-16">
             <h1 className="text-4xl font-bold flex items-center justify-center gap-4"><Shield size={36} /> Mesa Diretora</h1>
-            <p className="text-lg mt-4 text-gray-300 max-w-2xl mx-auto">A Mesa Diretora é responsável pela direção dos trabalhos legislativos. Clique em cada cargo para ver os membros.</p>
+            <p className="text-lg mt-4 text-gray-300 max-w-2xl mx-auto">A Mesa Diretora é o órgão que dirige os trabalhos da Câmara. Clique em um cargo para ver seus membros e atribuições.</p>
         </div>
 
         {mesaDiretora.length > 0 ? (
-             <Accordion type="single" collapsible className="w-full max-w-4xl mx-auto">
-                <div className="relative flex flex-col items-center gap-12">
-                   {/* The vertical line */}
-                   <div className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-0.5 bg-white/20" />
+             <Accordion type="single" collapsible className="w-full">
+                <div className="relative w-full flex justify-center items-start">
+                   {/* The horizontal line */}
+                   <div className="absolute top-14 left-0 w-full h-0.5 bg-white/20" />
                    
                    {timelineItems.map((item) => (
                        <TimelineItem key={item.value} {...item} />
@@ -173,3 +177,5 @@ export default function DeputadosPage() {
     </div>
   );
 }
+
+    
