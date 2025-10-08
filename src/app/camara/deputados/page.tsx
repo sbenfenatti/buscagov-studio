@@ -14,42 +14,39 @@ type DeputadoMesa = {
   siglaUf: string;
   urlFoto: string;
   titulo: string;
-  dataInicio: string;
-  dataFim: string | null;
 };
 
-async function getMesaDiretora() {
-  try {
-    const legislaturaId = 57; // Legislatura atual
-    const response = await fetch(`https://dadosabertos.camara.leg.br/api/v2/legislaturas/${legislaturaId}/mesa`, {
-      next: { revalidate: 3600 } // Revalida a cada 1 hora
-    });
-    if (!response.ok) {
-      throw new Error('Falha ao buscar dados da API');
-    }
-    const data = await response.json();
+// Dados simulados da Mesa Diretora
+const getMesaDiretoraSimulada = (): DeputadoMesa[] => {
+  const mesaSimulada: Omit<DeputadoMesa, 'id'>[] = [
+    { nome: 'Arthur Lira', siglaPartido: 'PP', siglaUf: 'AL', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/204554.jpg', titulo: 'Presidente' },
+    { nome: 'Marcos Pereira', siglaPartido: 'REPUBLICANOS', siglaUf: 'SP', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/160532.jpg', titulo: '1º Vice-Presidente' },
+    { nome: 'Sóstenes Cavalcante', siglaPartido: 'PL', siglaUf: 'RJ', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/178943.jpg', titulo: '2º Vice-Presidente' },
+    { nome: 'Luciano Bivar', siglaPartido: 'UNIÃO', siglaUf: 'PE', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/73433.jpg', titulo: '1º Secretário' },
+    { nome: 'Maria do Rosário', siglaPartido: 'PT', siglaUf: 'RS', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/74398.jpg', titulo: '2º Secretária' },
+    { nome: 'Júlio Cesar', siglaPartido: 'PSD', siglaUf: 'PI', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/160583.jpg', titulo: '3º Secretário' },
+    { nome: 'Lucio Mosquini', siglaPartido: 'MDB', siglaUf: 'RO', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/178960.jpg', titulo: '4º Secretário' },
+    { nome: 'Gilberto Nascimento', siglaPartido: 'PSC', siglaUf: 'SP', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/74400.jpg', titulo: '1º Suplente' },
+    { nome: 'Jair Tatto', siglaPartido: 'PT', siglaUf: 'SP', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/121921.jpg', titulo: '2º Suplente' },
+    { nome: 'Roberto Monteiro', siglaPartido: 'PL', siglaUf: 'RJ', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/220611.jpg', titulo: '3º Suplente' },
+    { nome: 'Rodrigo Gambale', siglaPartido_2: 'PODE', siglaPartido: 'PODE', siglaUf: 'SP', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/220556.jpg', titulo: '4º Suplente' },
+  ];
 
-    const mesaAtual = data.dados.filter((membro: DeputadoMesa) => membro.dataFim === null);
+  const ordem = [
+    'Presidente', '1º Vice-Presidente', '2º Vice-Presidente',
+    '1º Secretário', '2º Secretária', '3º Secretário', '4º Secretário',
+    '1º Suplente', '2º Suplente', '3º Suplente', '4º Suplente'
+  ];
 
-    const deputadosOrdenados = mesaAtual.sort((a: DeputadoMesa, b: DeputadoMesa) => {
-        const ordem = [
-            'Presidente', '1º Vice-Presidente', '2º Vice-Presidente',
-            '1º Secretário', '2º Secretário', '3º Secretário', '4º Secretário',
-            '1º Suplente', '2º Suplente', '3º Suplente', '4º Suplente'
-        ];
-        return ordem.indexOf(a.titulo) - ordem.indexOf(b.titulo);
-    });
-
-    return deputadosOrdenados as DeputadoMesa[];
-  } catch (error) {
-    console.error('Erro ao buscar dados da Mesa Diretora:', error);
-    return [];
-  }
-}
+  // Adiciona IDs e ordena
+  return mesaSimulada
+    .map((dep, index) => ({ ...dep, id: 204554 + index }))
+    .sort((a, b) => ordem.indexOf(a.titulo) - ordem.indexOf(b.titulo));
+};
 
 
-export default async function DeputadosPage() {
-  const mesaDiretora = await getMesaDiretora();
+export default function DeputadosPage() {
+  const mesaDiretora = getMesaDiretoraSimulada();
 
   return (
     <div className="relative w-full min-h-screen overflow-auto">
