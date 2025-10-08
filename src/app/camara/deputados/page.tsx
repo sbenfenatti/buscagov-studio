@@ -22,17 +22,17 @@ type Deputado = {
 };
 
 const MemberCard = ({ dep }: { dep: Deputado }) => (
-    <div className="bg-black/40 border border-white/20 rounded-lg p-4 flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:bg-black/60">
+    <div className="bg-black/40 border border-white/20 rounded-lg p-6 flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:bg-black/60 min-w-[200px]">
         <Image 
             src={dep.urlFoto} 
             alt={`Foto de ${dep.nome}`}
-            width={80}
-            height={80}
-            className="rounded-full border-2 border-white/30 mb-3"
+            width={100}
+            height={100}
+            className="rounded-full border-2 border-white/30 mb-4"
         />
-        <h3 className="font-bold text-md">{dep.nome}</h3>
-        <p className="text-sm text-gray-300">{`${dep.siglaPartido}-${dep.siglaUf}`}</p>
-        <Badge variant="secondary" className="mt-2 text-xs bg-blue-300/10 text-blue-200">{dep.titulo}</Badge>
+        <h3 className="font-bold text-lg mb-2">{dep.nome}</h3>
+        <p className="text-sm text-gray-300 mb-3">{`${dep.siglaPartido}-${dep.siglaUf}`}</p>
+        <Badge variant="secondary" className="text-sm bg-blue-300/10 text-blue-200 px-3 py-1">{dep.titulo}</Badge>
     </div>
 );
 
@@ -49,7 +49,7 @@ const GroupAccordionItem = ({ title, icon: Icon, members, description }: { title
             </AccordionTrigger>
             <AccordionContent className="mt-4 text-white p-6 bg-black/30 rounded-lg border border-white/10">
                 <p className="text-gray-300 mb-6 text-center">{description}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex flex-wrap justify-center gap-6">
                     {members.map(dep => <MemberCard key={dep.id} dep={dep} />)}
                 </div>
             </AccordionContent>
@@ -96,10 +96,24 @@ export default function DeputadosPage() {
     getMesaDiretora();
   }, []);
 
-  const presidente = mesaDiretora.filter(m => m.titulo?.includes('Presidente'));
-  const vices = mesaDiretora.filter(m => m.titulo?.includes('Vice-Presidente'));
-  const secretarios = mesaDiretora.filter(m => m.titulo?.includes('Secretári'));
-  const suplentes = mesaDiretora.filter(m => m.titulo?.includes('Suplente'));
+  // Filtros mais específicos para separar corretamente os cargos
+  const presidente = mesaDiretora.filter(m => 
+    m.titulo?.toLowerCase() === 'presidente' || 
+    (m.titulo?.toLowerCase().includes('presidente') && !m.titulo?.toLowerCase().includes('vice'))
+  );
+  
+  const vices = mesaDiretora.filter(m => 
+    m.titulo?.toLowerCase().includes('vice-presidente')
+  );
+  
+  const secretarios = mesaDiretora.filter(m => 
+    m.titulo?.toLowerCase().includes('secretári') && 
+    !m.titulo?.toLowerCase().includes('suplente')
+  );
+  
+  const suplentes = mesaDiretora.filter(m => 
+    m.titulo?.toLowerCase().includes('suplente')
+  );
 
   const groups = [
     { title: "Presidência", icon: Crown, members: presidente, description: "Dirige as sessões da Câmara, representa a instituição e supervisiona todos os trabalhos legislativos e administrativos." },
@@ -166,7 +180,7 @@ export default function DeputadosPage() {
         )}
 
         {!loading && !error && (
-            <div className="relative w-full max-w-5xl mx-auto">
+            <div className="relative w-full max-w-6xl mx-auto">
                 <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-white/20 -translate-y-1/2" />
                 <Accordion type="single" collapsible className="relative flex flex-col md:flex-row justify-between items-start gap-8 md:gap-0">
                     {groups.map((group, index) => (
