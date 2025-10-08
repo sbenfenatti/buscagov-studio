@@ -69,14 +69,16 @@ export default function DeputadosPage() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('https://dados.camara.leg.br/api/v2/legislaturas/57/mesa');
+        // Fetch from the local API route instead of the external one
+        const response = await fetch('/api/camara/mesa');
         
         if (!response.ok) {
           throw new Error(`Falha na requisição: ${response.statusText}`);
         }
         
         const data = await response.json();
-        const membrosAtuais = data.dados.filter((m: Deputado) => m.dataFim === null);
+        // The data is already filtered on the server, but we can keep this for safety
+        const membrosAtuais = data.filter((m: Deputado) => m.dataFim === null);
         setMesaDiretora(membrosAtuais);
       } catch (e: any) {
         console.error('Erro ao buscar dados da Mesa Diretora:', e);
@@ -164,7 +166,7 @@ export default function DeputadosPage() {
                     {groups.map((group, index) => (
                         <div key={group.title} className="w-full md:w-auto flex flex-col items-center z-10">
                             <div className="w-full md:w-auto flex flex-col items-center">
-                                <div className="block md:hidden w-0.5 h-8 bg-white/20" style={{ order: -1 }} />
+                                {index !== 0 && <div className="block md:hidden w-0.5 h-8 bg-white/20" />}
                                 <GroupAccordionItem 
                                     key={group.title}
                                     title={group.title}
@@ -172,7 +174,7 @@ export default function DeputadosPage() {
                                     members={group.members}
                                     description={group.description}
                                 />
-                                <div className="block md:hidden w-0.5 h-8 bg-white/20" />
+                                {index !== groups.length - 1 && <div className="block md:hidden w-0.5 h-8 bg-white/20" />}
                             </div>
                         </div>
                     ))}
