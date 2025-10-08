@@ -8,10 +8,13 @@ import { ArrowLeft, Users, TrendingUp, Wallet, BookOpen, GraduationCap, BarChart
 import { cn } from '@/lib/utils';
 
 // --- Data Definitions ---
-const totalDeputados = 513;
+const totalDeputados = 513; // Total seats
 
 const getDemographicData = () => {
   const data = [];
+  const profissaoCounts = { 'Advogado (a)': 103, 'Empresário (a)': 84, 'Professor (a)': 50, 'Produtor (a) rural': 40, 'Médico (a)': 36, 'Administrador (a)': 33, 'Engenheiro (a)': 26, 'Jornalista': 23, 'Policial': 21, 'Pastor': 17, 'Bacharel em Direito': 16, 'Economista': 14, 'Delegado (a)': 13, 'Servidor (a) público (a)': 12, 'Político (a)': 10, 'Gestor (a) público (a)': 6, 'Radialista': 6, 'Bancário (a)': 5, 'Bispo evangélico': 5, 'Comerciante': 5, 'Escritor (a)': 5, 'Militar': 5, 'Pedagogo (a)': 5, 'Apresentador': 4, 'Arquiteto (a)': 4, 'Cientista político': 4, 'Comunicador (a)': 4, 'Enfermeiro (a)': 4, 'Teólogo': 4, 'Assistente Social': 3, 'Atleta': 3, 'Ator': 3, 'Dirigente desportivo': 3, 'Influenciador digital': 3, 'Sacerdote católico': 3, 'Ambientalista': 2, 'Auditor': 2, 'Auxiliar de Enfermagem': 2, 'Biólogo (a)': 2, 'Bombeiro Militar': 2, 'Cantor': 2, 'Comerciário': 2, 'Contador': 2, 'Corretor de imóveis': 2, 'Defensor público': 2, 'Estudante': 2, 'Fisioterapeuta': 2, 'Graduado Ciências da Computação': 2, 'Historiador (a)': 2, 'investidor (a)': 2, 'Procurador (a)': 2, 'Promotor de Justiça': 2, 'Trabalhador rural': 2, 'Turismólogo': 2, 'Assessor': 1, 'Ativista Social': 1, 'Autônomo': 1, 'Bibliotecário': 1, 'Caminhoneiro': 1, 'Cientista militar': 1, 'Cientista Social': 1, 'Dona de casa': 1, 'Eletrotécnico': 1, 'Escrevente': 1, 'Escrivão': 1, 'Farmacêutico (a)': 1, 'Geógrafo': 1, 'Geólogo': 1, 'Gerente de projetos': 1, 'Metalúrgico': 1, 'Músico': 1, 'Oficial de Justiça': 1, 'Paraquedista militar': 1, 'Pescador': 1, 'Psicanalista': 1, 'Psicólogo': 1, 'Psicopedagogo': 1, 'Públicitária': 1, 'Sanitarista': 1, 'Sociólogo': 1, 'Técnico agrícola': 1, 'Veterinário': 1};
+  let profissoesArray = Object.entries(profissaoCounts).flatMap(([p, count]) => Array(count).fill(p));
+  
   for (let i = 1; i <= totalDeputados; i++) {
     // Gênero: 90 Deputadas, 423 Deputados
     const genero = i <= 90 ? 'Deputadas' : 'Deputados';
@@ -22,7 +25,8 @@ const getDemographicData = () => {
     else if (i <= 108 + 270) idade = '41-60 anos';
     else idade = '21-40 anos';
 
-    // Patrimônio Simplificado: 17 (sem), 31 (até 100k), 101 (100k-500k), 183 (500k-2M), 80 (>5M)
+    // Patrimônio Simplificado: 17 (sem), 31 (até 100k), 101 (100k-500k), 183 (500k-2M), 80 (>5M) -> Total 312, precisa remapear
+    // Usando contagens da imagem: 80 (>5M), 183 (500k-2M), 101 (100k-500k), 31 (até 100k), 17 (sem)
     let patrimonio;
      if (i <= 80) patrimonio = 'Acima de R$5 milhões';
     else if (i <= 80 + 183) patrimonio = 'R$500 mil a R$2 milhões';
@@ -56,7 +60,7 @@ const getDemographicData = () => {
     else mandatos = '1º Mandato';
 
 
-    data.push({ id: i, genero, idade, patrimonio, raca, escolaridade, mandatos });
+    data.push({ id: i, genero, idade, patrimonio, raca, escolaridade, mandatos, profissao: profissoesArray[i-1] || 'Não informada' });
   }
   return data;
 };
@@ -74,11 +78,11 @@ const config = {
     '21-40 anos': { color: 'hsl(170 80% 45%)', icon: TrendingUp, count: 135 },
   },
   patrimonio: {
-    'Acima de R$5 milhões': { color: 'hsl(120 80% 40%)', icon: Wallet, count: 80 },
-    'R$500 mil a R$2 milhões': { color: 'hsl(100 70% 60%)', icon: Wallet, count: 183 },
-    'R$100 mil a R$500 mil': { color: 'hsl(80 80% 60%)', icon: Wallet, count: 101 },
-    'Até R$100 mil': { color: 'hsl(60 100% 75%)', icon: Wallet, count: 31 },
-    'Sem patrimônio declarado': { color: 'hsl(0 0% 80%)', icon: Wallet, count: 17 },
+    'Acima de R$5 milhões': { color: 'hsl(300 90% 45%)', icon: Landmark, count: 80 },
+    'R$500 mil a R$2 milhões': { color: 'hsl(250 85% 55%)', icon: Landmark, count: 183 },
+    'R$100 mil a R$500 mil': { color: 'hsl(200 90% 60%)', icon: Landmark, count: 101 },
+    'Até R$100 mil': { color: 'hsl(150 80% 70%)', icon: Landmark, count: 31 },
+    'Sem patrimônio declarado': { color: 'hsl(0 0% 80%)', icon: Landmark, count: 17 },
   },
   raca: {
     'Branca': { color: 'hsl(35 100% 90%)', icon: Users2, count: 370 },
@@ -110,21 +114,32 @@ const WaffleChart = ({ data, activeFilter, hoveredCategory, setHoveredCategory }
   const HoverIcon = hoveredCategory ? config[activeFilter][hoveredCategory]?.icon : null;
   const count = hoveredCategory ? config[activeFilter][hoveredCategory]?.count : 0;
     
+  // 33 cols * 16 rows = 528. We will only render 513 items.
+  const totalItems = 33 * 16;
+  const dataWithPlaceholders = [...data];
+  while (dataWithPlaceholders.length < totalItems) {
+      dataWithPlaceholders.push({ id: `placeholder-${dataWithPlaceholders.length}`, placeholder: true });
+  }
+
   return (
     <div 
         className="relative"
         onMouseLeave={() => setHoveredCategory(null)}
     >
-        <div className="grid grid-cols-27 grid-rows-19 gap-1.5 w-full max-w-4xl mx-auto">
-            {data.map(deputado => {
-                const category = deputado[activeFilter];
+        <div className="grid grid-cols-33 gap-1.5 w-full mx-auto">
+            {dataWithPlaceholders.map(item => {
+                if (item.placeholder || item.id > 513) {
+                    return <div key={item.id} className="w-full h-0 pb-[100%] opacity-0" />;
+                }
+
+                const category = item[activeFilter];
                 const color = config[activeFilter][category].color;
                 const isHovered = hoveredCategory === category;
                 const isAnotherHovered = hoveredCategory !== null && !isHovered;
 
                 return (
                     <div
-                        key={deputado.id}
+                        key={item.id}
                         onMouseEnter={() => setHoveredCategory(category)}
                         className={cn(
                             "w-full h-0 pb-[100%] rounded-[2px] transition-all duration-200",
@@ -145,11 +160,8 @@ const WaffleChart = ({ data, activeFilter, hoveredCategory, setHoveredCategory }
             </div>
         )}
       <style jsx>{`
-        .grid-cols-27 {
-          grid-template-columns: repeat(27, minmax(0, 1fr));
-        }
-        .grid-rows-19 {
-          grid-template-rows: repeat(19, minmax(0, 1fr));
+        .grid-cols-33 {
+          grid-template-columns: repeat(33, minmax(0, 1fr));
         }
       `}</style>
     </div>
@@ -160,10 +172,8 @@ const WaffleChart = ({ data, activeFilter, hoveredCategory, setHoveredCategory }
 // --- Legend Component ---
 const Legend = ({ activeFilter }: { activeFilter: FilterType }) => {
   const items = config[activeFilter];
-  const orderedItems = Object.entries(items).sort(([keyA], [keyB]) => {
-      const order = Object.keys(items);
-      return order.indexOf(keyA) - order.indexOf(keyB);
-  });
+  // The order of items in the legend is now determined by their order in the `config` object
+  const orderedItems = Object.entries(items);
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8">
@@ -233,7 +243,7 @@ export default function CamaraPage() {
             <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">Cada um dos 513 blocos representa uma cadeira na Câmara dos Deputados. Use os filtros para ver a composição demográfica da casa.</p>
         </div>
 
-        <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-lg p-6 w-full max-w-5xl">
+        <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-lg p-6 w-full">
             <div className="flex items-center justify-center flex-wrap gap-4 mb-8">
                 {filters.map(filter => (
                     <Button
