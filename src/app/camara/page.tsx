@@ -136,7 +136,7 @@ export default function CamaraPage() {
   ];
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden">
+    <div className="relative w-full min-h-screen overflow-auto">
       <div className="absolute inset-0 bg-camara-background-image bg-cover bg-center" />
       <div className="absolute inset-0 bg-black/70" />
       <header className="sticky top-0 z-20 bg-transparent">
@@ -170,7 +170,7 @@ export default function CamaraPage() {
           </div>
         </div>
       </header>
-      <main className="relative z-10 container mx-auto px-6 py-12 flex flex-col items-center justify-center text-white text-center" style={{ minHeight: 'calc(100vh - 88px)' }}>
+      <main className="relative z-10 container mx-auto px-6 py-12 flex flex-col items-center text-white text-center">
         <div className="mb-12">
             <h1 className="text-5xl font-extrabold tracking-tight">Você se sente representado?</h1>
             <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">Cada um dos 513 blocos representa uma cadeira na Câmara dos Deputados. Use os filtros para ver a composição demográfica da casa.</p>
