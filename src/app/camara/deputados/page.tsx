@@ -88,10 +88,10 @@ export default function DeputadosPage() {
     getMesaDiretora();
   }, []);
 
-  const presidente = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Presidente'));
-  const vices = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Vice-Presidente'));
-  const secretarios = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Secretári'));
-  const suplentes = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Suplente'));
+  const presidente = mesaDiretora.filter(m => m.titulo?.includes('Presidente'));
+  const vices = mesaDiretora.filter(m => m.titulo?.includes('Vice-Presidente'));
+  const secretarios = mesaDiretora.filter(m => m.titulo?.includes('Secretári'));
+  const suplentes = mesaDiretora.filter(m => m.titulo?.includes('Suplente'));
 
   const groups = [
     { title: "Presidência", icon: Crown, members: presidente, description: "Dirige as sessões da Câmara, representa a instituição e supervisiona todos os trabalhos legislativos e administrativos." },
@@ -160,7 +160,7 @@ export default function DeputadosPage() {
         {!loading && !error && (
             <div className="relative w-full max-w-5xl mx-auto">
                 <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-white/20 -translate-y-1/2" />
-                <Accordion type="single" collapsible className="relative flex flex-col md:flex-row justify-between items-center gap-8 md:gap-0">
+                <Accordion type="single" collapsible className="relative flex flex-col md:flex-row justify-between items-start gap-8 md:gap-0">
                     {groups.map((group, index) => (
                         <div key={group.title} className="w-full md:w-auto flex flex-col items-center z-10">
                             <div className="w-full md:w-auto flex flex-col items-center">
