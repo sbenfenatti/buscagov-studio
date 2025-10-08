@@ -69,16 +69,15 @@ export default function DeputadosPage() {
       try {
         setLoading(true);
         setError(null);
-        // Fetch from the local API route instead of the external one
-        const response = await fetch('/api/camara/mesa');
+        // Fetch from the external API directly on the client
+        const response = await fetch('https://dados.camara.leg.br/api/v2/legislaturas/57/mesa');
         
         if (!response.ok) {
           throw new Error(`Falha na requisição: ${response.statusText}`);
         }
         
         const data = await response.json();
-        // The data is already filtered on the server, but we can keep this for safety
-        const membrosAtuais = data.filter((m: Deputado) => m.dataFim === null);
+        const membrosAtuais = data.dados.filter((m: Deputado) => m.dataFim === null);
         setMesaDiretora(membrosAtuais);
       } catch (e: any) {
         console.error('Erro ao buscar dados da Mesa Diretora:', e);
