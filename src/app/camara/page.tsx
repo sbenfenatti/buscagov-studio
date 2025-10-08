@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -17,17 +18,17 @@ const getDemographicData = () => {
 
     // Idade: 135 (21-40), 270 (41-60), 108 (61+)
     let idade;
-    if (i <= 135) idade = '21-40 anos';
-    else if (i <= 135 + 270) idade = '41-60 anos';
-    else idade = '61+ anos';
+    if (i <= 108) idade = '61+ anos';
+    else if (i <= 108 + 270) idade = '41-60 anos';
+    else idade = '21-40 anos';
 
     // Patrimônio Simplificado: 17 (sem), 31 (até 100k), 101 (100k-500k), 183 (500k-2M), 80 (>5M), (101 de 2-5M ignorados por enquanto)
     let patrimonio;
-    if (i <= 17) patrimonio = 'Sem patrimônio';
-    else if (i <= 17 + 31) patrimonio = 'Até R$100 mil';
-    else if (i <= 17 + 31 + 101) patrimonio = 'R$100 mil a R$500 mil';
-    else if (i <= 17 + 31 + 101 + 183) patrimonio = 'R$500 mil a R$2 milhões';
-    else patrimonio = 'Acima de R$5 milhões';
+    if (i <= 80) patrimonio = 'Acima de R$5 milhões';
+    else if (i <= 80 + 183) patrimonio = 'R$500 mil a R$2 milhões';
+    else if (i <= 80 + 183 + 101) patrimonio = 'R$100 mil a R$500 mil';
+    else if (i <= 80 + 183 + 101 + 31) patrimonio = 'Até R$100 mil';
+    else patrimonio = 'Sem patrimônio';
 
 
     // Raça/Cor: 370 Brancos, 107 Pardos, 27 Pretos, 5 Indígenas, 3 Amarelos, 1 Não Informado
@@ -41,18 +42,18 @@ const getDemographicData = () => {
 
     // Escolaridade: 421 Superior, 79 Médio, 13 Pós
     let escolaridade;
-    if (i <= 79) escolaridade = 'Ensino Médio';
-    else if (i <= 79 + 421) escolaridade = 'Superior Completo';
-    else escolaridade = 'Pós-graduação';
+    if (i <= 13) escolaridade = 'Pós-graduação';
+    else if (i <= 13 + 421) escolaridade = 'Superior Completo';
+    else escolaridade = 'Ensino Médio';
 
 
     // Mandatos: 228 (1), 118 (2), 70 (3), 42 (4), 55 (5+)
     let mandatos;
-    if (i <= 228) mandatos = '1º Mandato';
-    else if (i <= 228 + 118) mandatos = '2º Mandato';
-    else if (i <= 228 + 118 + 70) mandatos = '3º Mandato';
-    else if (i <= 228 + 118 + 70 + 42) mandatos = '4º Mandato';
-    else mandatos = '5 ou mais';
+    if (i <= 55) mandatos = '5 ou mais';
+    else if (i <= 55 + 42) mandatos = '4º Mandato';
+    else if (i <= 55 + 42 + 70) mandatos = '3º Mandato';
+    else if (i <= 55 + 42 + 70 + 118) mandatos = '2º Mandato';
+    else mandatos = '1º Mandato';
 
 
     data.push({ id: i, genero, idade, patrimonio, raca, escolaridade, mandatos });
@@ -64,40 +65,40 @@ const getDemographicData = () => {
 // --- Color Mappings ---
 const colorConfig = {
   genero: {
-    'Masculino': 'hsl(210 80% 55%)', // Strong Blue
-    'Feminino': 'hsl(340 80% 60%)', // Strong Pink
+    'Masculino': 'hsl(210 80% 55%)',
+    'Feminino': 'hsl(340 80% 60%)',
   },
   idade: {
-    '21-40 anos': 'hsl(170 80% 45%)', // Teal
-    '41-60 anos': 'hsl(45 90% 55%)',  // Gold
-    '61+ anos': 'hsl(280 70% 60%)',   // Purple
+    '61+ anos': 'hsl(280 70% 60%)',
+    '41-60 anos': 'hsl(45 90% 55%)',
+    '21-40 anos': 'hsl(170 80% 45%)',
   },
   patrimonio: {
-    'Sem patrimônio': 'hsl(0 0% 70%)',            // Grey
-    'Até R$100 mil': 'hsl(120 60% 75%)',           // Light Green
-    'R$100 mil a R$500 mil': 'hsl(90 70% 60%)',     // Lime
-    'R$500 mil a R$2 milhões': 'hsl(30 80% 60%)',  // Orange
-    'Acima de R$5 milhões': 'hsl(360 90% 55%)',    // Red
+    'Acima de R$5 milhões': 'hsl(360 90% 55%)',
+    'R$500 mil a R$2 milhões': 'hsl(30 80% 60%)',
+    'R$100 mil a R$500 mil': 'hsl(90 70% 60%)',
+    'Até R$100 mil': 'hsl(120 60% 75%)',
+    'Sem patrimônio': 'hsl(0 0% 70%)',
   },
   raca: {
-    'Branca': 'hsl(35 60% 80%)',     // Cream
-    'Parda': 'hsl(30 40% 50%)',      // Brown
-    'Preta': 'hsl(0 0% 20%)',        // Very Dark Grey
-    'Amarela': 'hsl(60 100% 70%)',   // Bright Yellow
-    'Indígena': 'hsl(10 70% 50%)',     // Terracotta Red
-    'Não Informado': 'hsl(210 10% 85%)', // Light Cool Grey
+    'Branca': 'hsl(35 60% 80%)',
+    'Parda': 'hsl(30 40% 50%)',
+    'Preta': 'hsl(0 0% 20%)',
+    'Indígena': 'hsl(10 70% 50%)',
+    'Amarela': 'hsl(60 100% 70%)',
+    'Não Informado': 'hsl(210 10% 85%)',
   },
   escolaridade: {
-    'Ensino Médio': 'hsl(210 70% 70%)', // Light Blue
-    'Superior Completo': 'hsl(260 70% 65%)', // Indigo
-    'Pós-graduação': 'hsl(310 70% 55%)', // Magenta
+    'Pós-graduação': 'hsl(310 70% 55%)',
+    'Superior Completo': 'hsl(260 70% 65%)',
+    'Ensino Médio': 'hsl(210 70% 70%)',
   },
   mandatos: {
-    '1º Mandato': 'hsl(180 80% 80%)', // Pale Cyan
-    '2º Mandato': 'hsl(160 60% 60%)', // Seafoam Green
-    '3º Mandato': 'hsl(140 50% 45%)', // Forest Green
-    '4º Mandato': 'hsl(120 70% 30%)', // Dark Green
-    '5 ou mais': 'hsl(100 90% 20%)',  // Very Dark Green
+    '5 ou mais': 'hsl(100 90% 20%)',
+    '4º Mandato': 'hsl(120 70% 30%)',
+    '3º Mandato': 'hsl(140 50% 45%)',
+    '2º Mandato': 'hsl(160 60% 60%)',
+    '1º Mandato': 'hsl(180 80% 80%)',
   }
 };
 
