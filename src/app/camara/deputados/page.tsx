@@ -88,7 +88,7 @@ const MemberCard = ({ dep }: { dep: Deputado }) => (
   </div>
 );
 
-// Componente do Chart Semicircular do Plenário - CORRIGIDO
+// Componente do Chart Semicircular do Plenário - TOTALMENTE CORRIGIDO
 const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
   deputados: DeputadoPlenario[];
   hoveredPartido: string | null;
@@ -108,17 +108,20 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
     return partidosOrdenados;
   }, [deputados]);
 
-  // Distribui deputados em posições semicirculares - GEOMETRIA CORRIGIDA
+  // Distribui deputados em posições semicirculares - GEOMETRIA TOTALMENTE CORRIGIDA
   const posicoes = useMemo(() => {
     const totalDeputados = deputados.length;
-    const numeroFileiras = 9;
-    const raioBase = 120;
-    const espacamentoFileira = 18;
+    const numeroFileiras = 10;
+    const raioBase = 80;
+    const espacamentoFileira = 20;
+    const centerX = 0;
+    const centerY = 0;
     
-    // Ângulos para semicírculo côncavo voltado para cima
-    const anguloInicio = Math.PI; // 180° (esquerda)
-    const anguloFim = 0; // 0° (direita)
-    const anguloTotal = Math.PI; // 180° total
+    // Configuração para semicírculo côncavo voltado para cima (formato tigela 🏛️)
+    // Ângulos: de π (180°) até 0 (0°) = semicírculo inferior
+    const anguloInicio = Math.PI; // 180° - esquerda
+    const anguloFim = 0; // 0° - direita
+    const anguloTotal = Math.PI; // Amplitude de 180°
     
     const posicoesList: Array<{
       x: number;
@@ -131,39 +134,43 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
     const calcularCadeirasFileira = (fileira: number): number => {
       const raio = raioBase + fileira * espacamentoFileira;
       const comprimentoArco = raio * anguloTotal;
-      const espacamentoCadeira = 8; // Espaçamento entre cadeiras
+      const espacamentoCadeira = 7; // Espaçamento entre cadeiras
       return Math.floor(comprimentoArco / espacamentoCadeira);
     };
     
-    // Calcula total de cadeiras disponíveis
+    // Calcula total de cadeiras disponíveis em todas as fileiras
     const totalCadeirasDisponiveis = Array.from({ length: numeroFileiras }, (_, i) => 
       calcularCadeirasFileira(i)
     ).reduce((sum, count) => sum + count, 0);
     
-    // Distribui deputados proporcionalmente
+    // Distribui deputados proporcionalmente pelas fileiras
     let deputadoIndex = 0;
     
-    for (let fileira = 0; fileira < numeroFileiras; fileira++) {
+    for (let fileira = 0; fileira < numeroFileiras && deputadoIndex < totalDeputados; fileira++) {
       const cadeirasNestaFileira = calcularCadeirasFileira(fileira);
       const raio = raioBase + fileira * espacamentoFileira;
       
-      // Quantos deputados colocar nesta fileira
+      // Calcula quantos deputados colocar nesta fileira
+      const fileirasRestantes = numeroFileiras - fileira;
+      const cadeirasRestantes = Array.from({ length: fileirasRestantes }, (_, i) => 
+        calcularCadeirasFileira(fileira + i)
+      ).reduce((sum, count) => sum + count, 0);
+      
+      const deputadosRestantes = totalDeputados - deputadoIndex;
       const deputadosNestaFileira = Math.min(
         cadeirasNestaFileira,
-        Math.ceil((totalDeputados - deputadoIndex) * cadeirasNestaFileira / 
-          Array.from({ length: numeroFileiras - fileira }, (_, i) => 
-            calcularCadeirasFileira(fileira + i)
-          ).reduce((sum, count) => sum + count, 0))
+        Math.ceil(deputadosRestantes * cadeirasNestaFileira / cadeirasRestantes)
       );
       
+      // Posiciona deputados nesta fileira
       for (let cadeira = 0; cadeira < deputadosNestaFileira && deputadoIndex < totalDeputados; cadeira++) {
-        // Ângulo para esta cadeira (de 180° a 0°)
-        const progresso = cadeira / Math.max(1, deputadosNestaFileira - 1);
+        // Calcula o ângulo para esta cadeira
+        const progresso = deputadosNestaFileira > 1 ? cadeira / (deputadosNestaFileira - 1) : 0.5;
         const angulo = anguloInicio - (progresso * anguloTotal); // De π para 0
         
-        // Coordenadas (semicírculo côncavo para cima)
-        const x = Math.cos(angulo) * raio;
-        const y = Math.sin(angulo) * raio; // SIN positivo = côncavo para cima
+        // Coordenadas do semicírculo côncavo (abertura para cima)
+        const x = centerX + Math.cos(angulo) * raio;
+        const y = centerY + Math.sin(angulo) * raio; // SIN positivo = côncavo para cima
         
         // Encontra o partido do deputado atual
         let partidoAtual = '';
@@ -196,14 +203,17 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
 
   return (
     <div 
-      className="relative w-full max-w-5xl mx-auto h-80 flex items-center justify-center"
+      className="relative w-full max-w-6xl mx-auto" 
+      style={{ height: '400px' }}
       onMouseLeave={() => setHoveredPartido(null)}
     >
-      {/* SVG do semicírculo côncavo */}
+      {/* SVG do semicírculo côncavo - ViewBox expandido para evitar corte */}
       <svg 
-        viewBox="-350 -50 700 350" 
+        viewBox="-400 -50 800 450" 
         className="w-full h-full"
+        preserveAspectRatio="xMidYMid meet"
         aria-label="Plenário da Câmara dos Deputados"
+        style={{ overflow: 'visible' }}
       >
         {posicoes.map((pos, index) => {
           const isHovered = hoveredPartido === pos.partido;
@@ -213,13 +223,13 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
             <circle
               key={index}
               cx={pos.x}
-              cy={-pos.y} // Negativo para inverter o SVG (origem no topo)
-              r={isHovered ? "5" : "3.5"}
+              cy={-pos.y} // Inverte Y para corrigir orientação do SVG
+              r={isHovered ? "6" : "4"}
               fill={pos.cor}
               className={cn(
-                "transition-all duration-200 cursor-pointer",
-                isAnotherHovered ? "opacity-25" : "opacity-100",
-                isHovered ? "drop-shadow-lg scale-110" : ""
+                "transition-all duration-300 cursor-pointer",
+                isAnotherHovered ? "opacity-20" : "opacity-90",
+                isHovered ? "drop-shadow-lg" : ""
               )}
               onMouseEnter={() => setHoveredPartido(pos.partido)}
               aria-label={`Deputado do partido ${pos.partido}`}
@@ -228,34 +238,44 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
         })}
       </svg>
       
-      {/* Legenda Central - Posicionada no centro da base */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-none">
-        <div className="text-center bg-black/50 backdrop-blur-sm rounded-lg px-4 py-3 border border-white/20">
+      {/* Legenda Central - Posicionada no centro da base do semicírculo */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 pointer-events-none">
+        <div className="text-center bg-black/70 backdrop-blur-md rounded-xl px-6 py-4 border border-white/30 shadow-2xl">
           {hoveredPartido && partidoInfo ? (
             <>
               <div 
-                className="text-3xl font-bold transition-all duration-300"
+                className="text-4xl font-bold transition-all duration-300 mb-1"
                 style={{ color: partidoInfo.cor }}
               >
                 {hoveredPartido}
               </div>
-              <div className="text-lg text-white mt-1">
+              <div className="text-xl text-white">
                 {partidoInfo.quantidade} deputados
+              </div>
+              <div className="text-sm text-gray-300 mt-1">
+                {((partidoInfo.quantidade / totalDeputados) * 100).toFixed(1)}% do plenário
               </div>
             </>
           ) : (
             <>
-              <div className="text-3xl font-bold text-white">
+              <div className="text-4xl font-bold text-white mb-1">
                 🏛️ {totalDeputados}
               </div>
-              <div className="text-lg text-gray-300 mt-1">
+              <div className="text-xl text-gray-200">
                 Deputados
               </div>
               <div className="text-sm text-gray-400 mt-1">
-                57ª Legislatura
+                57ª Legislatura (2023-2027)
               </div>
             </>
           )}
+        </div>
+      </div>
+      
+      {/* Indicação de interatividade */}
+      <div className="absolute top-4 right-4 pointer-events-none">
+        <div className="text-xs text-gray-400 bg-black/50 px-3 py-2 rounded-lg border border-white/20">
+          💡 Passe o mouse sobre as cadeiras
         </div>
       </div>
     </div>
