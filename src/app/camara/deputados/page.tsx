@@ -14,36 +14,47 @@ type DeputadoMesa = {
   siglaPartido: string;
   siglaUf: string;
   urlFoto: string;
-  titulo: string;
+  titulo: string; // O cargo, ex: 'Presidente'
 };
 
-// Dados simulados da Mesa Diretora
-const getMesaDiretoraSimulada = (): DeputadoMesa[] => {
-  const mesaSimulada: Omit<DeputadoMesa, 'id'>[] = [
-    { nome: 'Arthur Lira', siglaPartido: 'PP', siglaUf: 'AL', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/204554.jpg', titulo: 'Presidente' },
-    { nome: 'Marcos Pereira', siglaPartido: 'REPUBLICANOS', siglaUf: 'SP', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/160532.jpg', titulo: '1º Vice-Presidente' },
-    { nome: 'Sóstenes Cavalcante', siglaPartido: 'PL', siglaUf: 'RJ', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/178943.jpg', titulo: '2º Vice-Presidente' },
-    { nome: 'Luciano Bivar', siglaPartido: 'UNIÃO', siglaUf: 'PE', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/73433.jpg', titulo: '1º Secretário' },
-    { nome: 'Maria do Rosário', siglaPartido: 'PT', siglaUf: 'RS', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/74398.jpg', titulo: '2º Secretária' },
-    { nome: 'Júlio Cesar', siglaPartido: 'PSD', siglaUf: 'PI', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/160583.jpg', titulo: '3º Secretário' },
-    { nome: 'Lucio Mosquini', siglaPartido: 'MDB', siglaUf: 'RO', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/178960.jpg', titulo: '4º Secretário' },
-    { nome: 'Gilberto Nascimento', siglaPartido: 'PSC', siglaUf: 'SP', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/74400.jpg', titulo: '1º Suplente' },
-    { nome: 'Jair Tatto', siglaPartido: 'PT', siglaUf: 'SP', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/121921.jpg', titulo: '2º Suplente' },
-    { nome: 'Roberto Monteiro', siglaPartido: 'PL', siglaUf: 'RJ', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/220611.jpg', titulo: '3º Suplente' },
-    { nome: 'Rodrigo Gambale', siglaPartido: 'PODE', siglaUf: 'SP', urlFoto: 'https://www.camara.leg.br/internet/deputado/bandep/220556.jpg', titulo: '4º Suplente' },
-  ];
+// Função para buscar e processar os dados da API
+async function getMesaDiretora(): Promise<DeputadoMesa[]> {
+  try {
+    const response = await fetch('https://dadosabertos.camara.leg.br/api/v2/legislaturas/57/mesa', {
+        next: { revalidate: 3600 } // Revalida a cada hora
+    });
+    if (!response.ok) {
+        throw new Error('Falha ao buscar dados da API');
+    }
+    const data = await response.json();
+    
+    // Filtra para manter apenas os membros atuais (sem data de fim)
+    const membrosAtuais = data.dados.filter((membro: any) => membro.dataFim === null);
 
-  const ordem = [
-    'Presidente', '1º Vice-Presidente', '2º Vice-Presidente',
-    '1º Secretário', '2º Secretária', '3º Secretário', '4º Secretário',
-    '1º Suplente', '2º Suplente', '3º Suplente', '4º Suplente'
-  ];
+    const deputadosMesa: DeputadoMesa[] = membrosAtuais.map((dep: any) => ({
+      id: dep.id,
+      nome: dep.nome,
+      siglaPartido: dep.siglaPartido,
+      siglaUf: dep.siglaUf,
+      urlFoto: dep.urlFoto,
+      titulo: dep.cargo,
+    }));
+    
+    const ordem = [
+        'Presidente', '1º Vice-Presidente', '2º Vice-Presidente',
+        '1º Secretário', '2º Secretária', '3º Secretário', '4º Secretário',
+        '1º Suplente', '2º Suplente', '3º Suplente', '4º Suplente'
+    ];
 
-  // Adiciona IDs e ordena
-  return mesaSimulada
-    .map((dep, index) => ({ ...dep, id: 204554 + index }))
-    .sort((a, b) => ordem.indexOf(a.titulo) - ordem.indexOf(b.titulo));
-};
+    // Ordena os deputados de acordo com a hierarquia da mesa
+    return deputadosMesa.sort((a, b) => ordem.indexOf(a.titulo) - ordem.indexOf(b.titulo));
+
+  } catch (error) {
+    console.error("Erro ao buscar dados da Mesa Diretora:", error);
+    return []; // Retorna um array vazio em caso de erro
+  }
+}
+
 
 const MemberCard = ({ dep, className }: { dep: DeputadoMesa, className?: string }) => (
     <Card className={cn("bg-black/30 backdrop-blur-md border-white/20 text-white text-center w-48 transition-all hover:bg-black/50 hover:scale-105", className)}>
@@ -62,12 +73,12 @@ const MemberCard = ({ dep, className }: { dep: DeputadoMesa, className?: string 
     </Card>
 );
 
-export default function DeputadosPage() {
-  const mesaDiretora = getMesaDiretoraSimulada();
+export default async function DeputadosPage() {
+  const mesaDiretora = await getMesaDiretora();
 
   const presidente = mesaDiretora.find(m => m.titulo === 'Presidente');
   const vices = mesaDiretora.filter(m => m.titulo.includes('Vice-Presidente'));
-  const secretarios = mesaDiretora.filter(m => m.titulo.includes('Secretári'));
+  const secretarios = mesaDiretora.filter(m => m.titulo.includes('Secretári')); // Pega 'Secretário' e 'Secretária'
   const suplentes = mesaDiretora.filter(m => m.titulo.includes('Suplente'));
 
   return (
@@ -114,32 +125,44 @@ export default function DeputadosPage() {
             <p className="text-lg mt-4 text-gray-300 max-w-2xl mx-auto">A Mesa Diretora é responsável pela direção dos trabalhos legislativos e dos serviços administrativos da Câmara.</p>
         </div>
 
-        <div className="flex flex-col items-center gap-y-8">
-            {/* Presidente */}
-            {presidente && (
-                <div className="flex justify-center">
-                    <MemberCard dep={presidente} className="w-52" />
-                </div>
-            )}
-            
-            {/* Vice-Presidentes */}
-            <div className="flex justify-center gap-x-8">
-                {vices.map(dep => <MemberCard key={dep.id} dep={dep} />)}
-            </div>
+        {mesaDiretora.length > 0 ? (
+            <div className="flex flex-col items-center gap-y-8">
+                {/* Presidente */}
+                {presidente && (
+                    <div className="flex justify-center">
+                        <MemberCard dep={presidente} className="w-52" />
+                    </div>
+                )}
+                
+                {/* Vice-Presidentes */}
+                {vices.length > 0 && (
+                    <div className="flex justify-center gap-x-8">
+                        {vices.map(dep => <MemberCard key={dep.id} dep={dep} />)}
+                    </div>
+                )}
 
-            {/* Secretários */}
-            <div className="flex justify-center flex-wrap gap-6">
-                {secretarios.map(dep => <MemberCard key={dep.id} dep={dep} className="w-44"/>)}
-            </div>
+                {/* Secretários */}
+                {secretarios.length > 0 && (
+                    <div className="flex justify-center flex-wrap gap-6">
+                        {secretarios.map(dep => <MemberCard key={dep.id} dep={dep} className="w-44"/>)}
+                    </div>
+                )}
 
-            {/* Suplentes */}
-            <div className="w-full border-t border-white/20 mt-8 pt-8">
-                 <h2 className="text-2xl font-bold text-center mb-6">Suplentes</h2>
-                <div className="flex justify-center flex-wrap gap-6">
-                    {suplentes.map(dep => <MemberCard key={dep.id} dep={dep} className="w-44" />)}
-                </div>
+                {/* Suplentes */}
+                {suplentes.length > 0 && (
+                    <div className="w-full border-t border-white/20 mt-8 pt-8">
+                        <h2 className="text-2xl font-bold text-center mb-6">Suplentes</h2>
+                        <div className="flex justify-center flex-wrap gap-6">
+                            {suplentes.map(dep => <MemberCard key={dep.id} dep={dep} className="w-44" />)}
+                        </div>
+                    </div>
+                )}
             </div>
-        </div>
+        ) : (
+            <div className="text-center text-gray-400">
+                <p>Não foi possível carregar os dados da Mesa Diretora. Tente novamente mais tarde.</p>
+            </div>
+        )}
       </main>
     </div>
   );
