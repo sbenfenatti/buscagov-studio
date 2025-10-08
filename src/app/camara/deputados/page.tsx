@@ -23,6 +23,11 @@ type Deputado = {
 async function getMesaDiretora(): Promise<Deputado[]> {
   try {
     const response = await fetch('https://dados.camara.leg.br/api/v2/legislaturas/57/mesa', {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        // @ts-ignore
+        agent: new (require('https')) .Agent({ rejectUnauthorized: false }),
         next: { revalidate: 3600 } // Revalida a cada hora
     });
     if (!response.ok) {
@@ -67,7 +72,7 @@ const GroupAccordionItem = ({ title, icon: Icon, members, description }: { title
             </AccordionTrigger>
             <AccordionContent className="mt-4 text-white p-6 bg-black/30 rounded-lg border border-white/10">
                 <p className="text-gray-300 mb-6 text-center">{description}</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {members.map(dep => <MemberCard key={dep.id} dep={dep} />)}
                 </div>
             </AccordionContent>
@@ -135,7 +140,7 @@ export default async function DeputadosPage() {
             <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">A Mesa Diretora é o órgão responsável pela direção dos trabalhos legislativos e dos serviços administrativos da Câmara. Clique em um cargo para ver seus membros e atribuições.</p>
         </div>
 
-        <Accordion type="single" collapsible className="w-full flex flex-col md:flex-row items-start gap-6">
+        <Accordion type="single" collapsible className="w-full flex flex-wrap justify-center items-start gap-6">
             {groups.map(group => (
                 <GroupAccordionItem 
                     key={group.title}
