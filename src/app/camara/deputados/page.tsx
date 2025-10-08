@@ -1,12 +1,14 @@
 
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, Shield, Crown, Group, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Crown, Group, ClipboardList, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
 type Deputado = {
@@ -19,30 +21,6 @@ type Deputado = {
   dataInicio: string;
   dataFim: string | null;
 };
-
-async function getMesaDiretora(): Promise<Deputado[]> {
-  try {
-    const response = await fetch('https://dados.camara.leg.br/api/v2/legislaturas/57/mesa', {
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        },
-        // @ts-ignore
-        agent: new (require('https')) .Agent({ rejectUnauthorized: false }),
-        next: { revalidate: 3600 } // Revalida a cada hora
-    });
-    if (!response.ok) {
-        throw new Error('Falha ao buscar dados da API');
-    }
-    const data = await response.json();
-    
-    // Filtra para manter apenas os membros atuais (sem data de fim)
-    return data.dados.filter((m: Deputado) => m.dataFim === null);
-  } catch (error) {
-    console.error('Erro ao buscar dados da Mesa Diretora:', error);
-    return []; // Retorna um array vazio em caso de erro
-  }
-}
-
 
 const MemberCard = ({ dep }: { dep: Deputado }) => (
     <div className="bg-black/40 border border-white/20 rounded-lg p-4 flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:bg-black/60">
@@ -63,8 +41,8 @@ const GroupAccordionItem = ({ title, icon: Icon, members, description }: { title
     if (members.length === 0) return null;
 
     return (
-        <AccordionItem value={title} className="border-b-0 flex-1 min-w-[240px]">
-            <AccordionTrigger className="bg-black/40 hover:bg-black/60 border border-white/20 rounded-lg p-6 flex flex-col justify-center items-center gap-3 text-white hover:no-underline [&[data-state=open]>div>svg]:text-blue-400">
+        <AccordionItem value={title} className="border-b-0">
+            <AccordionTrigger className="bg-black/40 hover:bg-black/60 border border-white/20 rounded-lg p-6 flex justify-center items-center gap-3 text-white hover:no-underline [&[data-state=open]>svg]:text-blue-400">
                 <div className="flex items-center gap-3">
                     <Icon className="h-8 w-8 text-white transition-colors" />
                     <h3 className="text-xl font-bold">{title}</h3>
@@ -81,8 +59,34 @@ const GroupAccordionItem = ({ title, icon: Icon, members, description }: { title
 };
 
 
-export default async function DeputadosPage() {
-  const mesaDiretora = await getMesaDiretora();
+export default function DeputadosPage() {
+  const [mesaDiretora, setMesaDiretora] = useState<Deputado[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function getMesaDiretora() {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch('https://dados.camara.leg.br/api/v2/legislaturas/57/mesa');
+        
+        if (!response.ok) {
+          throw new Error(`Falha na requisição: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        const membrosAtuais = data.dados.filter((m: Deputado) => m.dataFim === null);
+        setMesaDiretora(membrosAtuais);
+      } catch (e: any) {
+        console.error('Erro ao buscar dados da Mesa Diretora:', e);
+        setError('Não foi possível carregar os dados da Mesa Diretora. Tente novamente mais tarde.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    getMesaDiretora();
+  }, []);
 
   const presidente = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Presidente'));
   const vices = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Vice-Presidente'));
@@ -139,18 +143,42 @@ export default async function DeputadosPage() {
             <h1 className="text-4xl font-bold flex items-center justify-center gap-4"><Shield size={36} /> Mesa Diretora</h1>
             <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">A Mesa Diretora é o órgão responsável pela direção dos trabalhos legislativos e dos serviços administrativos da Câmara. Clique em um cargo para ver seus membros e atribuições.</p>
         </div>
+        
+        {loading && (
+          <div className="flex justify-center items-center h-40">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-300" />
+          </div>
+        )}
 
-        <Accordion type="single" collapsible className="w-full flex flex-wrap justify-center items-start gap-6">
-            {groups.map(group => (
-                <GroupAccordionItem 
-                    key={group.title}
-                    title={group.title}
-                    icon={group.icon}
-                    members={group.members}
-                    description={group.description}
-                />
-            ))}
-        </Accordion>
+        {error && (
+            <Alert variant="destructive" className="max-w-xl mx-auto bg-red-900/30 border-red-500/50 text-red-200">
+                <AlertTitle>Erro ao carregar dados</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        )}
+
+        {!loading && !error && (
+            <div className="relative w-full max-w-5xl mx-auto">
+                <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-white/20 -translate-y-1/2" />
+                <Accordion type="single" collapsible className="relative flex flex-col md:flex-row justify-between items-center gap-8 md:gap-0">
+                    {groups.map((group, index) => (
+                        <div key={group.title} className="w-full md:w-auto flex flex-col items-center z-10">
+                            <div className="w-full md:w-auto flex flex-col items-center">
+                                <div className="block md:hidden w-0.5 h-8 bg-white/20" style={{ order: -1 }} />
+                                <GroupAccordionItem 
+                                    key={group.title}
+                                    title={group.title}
+                                    icon={group.icon}
+                                    members={group.members}
+                                    description={group.description}
+                                />
+                                <div className="block md:hidden w-0.5 h-8 bg-white/20" />
+                            </div>
+                        </div>
+                    ))}
+                </Accordion>
+            </div>
+        )}
       </main>
     </div>
   );
