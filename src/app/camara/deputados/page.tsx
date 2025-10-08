@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Users, Shield, Crown, Group, ClipboardList, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from '@/lib/utils';
 
 type Deputado = {
   id: number;
@@ -19,11 +20,55 @@ type Deputado = {
   dataFim: string | null;
 };
 
+type DeputadoPlenario = {
+  id: number;
+  nome: string;
+  siglaPartido: string;
+  siglaUf: string;
+};
+
 type TimelineStep = {
   key: 'secretaria' | 'vice' | 'presidencia' | 'suplencia';
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   description: string;
+};
+
+// Cores para partidos - paleta diversificada
+const partidoCores: Record<string, string> = {
+  'PT': '#FF0000',
+  'PL': '#0066CC', 
+  'UNIÃO': '#FFA500',
+  'PP': '#800080',
+  'PSD': '#FFD700',
+  'REPUBLICANOS': '#008000',
+  'MDB': '#32CD32',
+  'PDT': '#FF1493',
+  'PSB': '#FF6347',
+  'PSDB': '#4169E1',
+  'SOLIDARIEDADE': '#FF8C00',
+  'PODE': '#9370DB',
+  'PSOL': '#DC143C',
+  'CIDADANIA': '#7FFF00',
+  'AVANTE': '#00CED1',
+  'PMN': '#B22222',
+  'PROS': '#CD853F',
+  'PC do B': '#8B0000',
+  'PATRIOTA': '#4682B4',
+  'REDE': '#00FF7F'
+};
+
+// Função para gerar cor para partido não mapeado
+const gerarCorPartido = (sigla: string): string => {
+  if (partidoCores[sigla]) return partidoCores[sigla];
+  
+  // Gera cor baseada no hash da sigla
+  let hash = 0;
+  for (let i = 0; i < sigla.length; i++) {
+    hash = sigla.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 70%, 50%)`;
 };
 
 const MemberCard = ({ dep }: { dep: Deputado }) => (
@@ -42,6 +87,134 @@ const MemberCard = ({ dep }: { dep: Deputado }) => (
     </Badge>
   </div>
 );
+
+// Componente do Chart Semicircular do Plenário
+const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
+  deputados: DeputadoPlenario[];
+  hoveredPartido: string | null;
+  setHoveredPartido: (partido: string | null) => void;
+}) => {
+  const partidosData = useMemo(() => {
+    const contagem = deputados.reduce((acc, dep) => {
+      acc[dep.siglaPartido] = (acc[dep.siglaPartido] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    // Ordena partidos por quantidade (maior primeiro)
+    const partidosOrdenados = Object.entries(contagem)
+      .sort(([,a], [,b]) => b - a)
+      .map(([sigla, quantidade]) => ({ sigla, quantidade, cor: gerarCorPartido(sigla) }));
+    
+    return partidosOrdenados;
+  }, [deputados]);
+
+  // Distribui deputados em posições semicirculares
+  const posicoes = useMemo(() => {
+    const totalDeputados = deputados.length;
+    const raio = 200; // Raio base
+    const numeroFileiras = 8; // Número de arcos concêntricos
+    const anguloInicio = Math.PI * 0.1; // 18 graus
+    const anguloFim = Math.PI * 0.9; // 162 graus (semicírculo)
+    
+    const posicoesList: Array<{
+      x: number;
+      y: number;
+      partido: string;
+      cor: string;
+    }> = [];
+    
+    let deputadoIndex = 0;
+    
+    // Para cada partido, calcular posições em ordem
+    partidosData.forEach(({ sigla, quantidade, cor }) => {
+      for (let i = 0; i < quantidade; i++) {
+        // Distribui deputados em espiral pelos arcos
+        const fileira = Math.floor(deputadoIndex / 64) % numeroFileiras;
+        const posicaoNaFileira = deputadoIndex % 64;
+        const deputadosPorFileira = Math.min(64, totalDeputados - fileira * 64);
+        
+        const raioAtual = raio + (fileira * 25);
+        const angulo = anguloInicio + (anguloFim - anguloInicio) * (posicaoNaFileira / Math.max(1, deputadosPorFileira - 1));
+        
+        const x = Math.cos(angulo) * raioAtual;
+        const y = Math.sin(angulo) * raioAtual * 0.6; // Achatamento para parecer mais semicírculo
+        
+        posicoesList.push({ x, y, partido: sigla, cor });
+        deputadoIndex++;
+      }
+    });
+    
+    return posicoesList;
+  }, [deputados, partidosData]);
+
+  const totalDeputados = deputados.length;
+  const partidoInfo = hoveredPartido ? partidosData.find(p => p.sigla === hoveredPartido) : null;
+
+  return (
+    <div 
+      className="relative w-full max-w-4xl mx-auto h-96 flex items-end justify-center"
+      onMouseLeave={() => setHoveredPartido(null)}
+    >
+      {/* SVG do semicírculo */}
+      <svg 
+        viewBox="-300 -50 600 300" 
+        className="w-full h-full overflow-visible"
+      >
+        {posicoes.map((pos, index) => {
+          const isHovered = hoveredPartido === pos.partido;
+          const isAnotherHovered = hoveredPartido !== null && !isHovered;
+          
+          return (
+            <circle
+              key={index}
+              cx={pos.x}
+              cy={-pos.y} // Negativo para inverter o Y (SVG tem origem no topo)
+              r={isHovered ? "4" : "3"}
+              fill={pos.cor}
+              className={cn(
+                "transition-all duration-200 cursor-pointer",
+                isAnotherHovered ? "opacity-20" : "opacity-100",
+                isHovered ? "drop-shadow-lg" : ""
+              )}
+              onMouseEnter={() => setHoveredPartido(pos.partido)}
+            />
+          );
+        })}
+      </svg>
+      
+      {/* Legenda Central */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="text-center">
+          {hoveredPartido && partidoInfo ? (
+            <>
+              <div 
+                className="text-4xl font-bold transition-all duration-300"
+                style={{ color: partidoInfo.cor }}
+              >
+                {hoveredPartido}
+              </div>
+              <div className="text-xl text-white mt-1">
+                {partidoInfo.quantidade} deputados
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-4xl font-bold text-white">
+                🏛️ {totalDeputados}
+              </div>
+              <div className="text-xl text-gray-300 mt-1">
+                Deputados
+              </div>
+              <div className="text-sm text-gray-400 mt-1">
+                57ª Legislatura
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Timeline = ({ 
   steps, 
@@ -93,9 +266,13 @@ const Timeline = ({
 
 export default function DeputadosPage() {
   const [mesaDiretora, setMesaDiretora] = useState<Deputado[]>([]);
+  const [deputados, setDeputados] = useState<DeputadoPlenario[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingDeputados, setLoadingDeputados] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeStep, setActiveStep] = useState<'secretaria' | 'vice' | 'presidencia' | 'suplencia'>('secretaria');
+  const [errorDeputados, setErrorDeputados] = useState<string | null>(null);
+  const [activeStep, setActiveStep] = useState<'secretaria' | 'vice' | 'presidencia' | 'suplencia'>('presidencia');
+  const [hoveredPartido, setHoveredPartido] = useState<string | null>(null);
 
   const timelineSteps: TimelineStep[] = [
     { key: 'secretaria', label: 'Secretaria', icon: ClipboardList, description: 'Responsável pela administração interna, atas das sessões e gestão de documentos.' },
@@ -133,6 +310,43 @@ export default function DeputadosPage() {
       }
     }
     getMesaDiretora();
+  }, []);
+
+  useEffect(() => {
+    async function getDeputados() {
+      try {
+        setLoadingDeputados(true);
+        setErrorDeputados(null);
+        
+        const response = await fetch('/api/camara/deputados?itens=513');
+        
+        if (!response.ok) {
+          throw new Error(`Falha na requisição: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Erro desconhecido');
+        }
+        
+        const deputadosData = result.data.map((dep: any) => ({
+          id: dep.id,
+          nome: dep.nome,
+          siglaPartido: dep.siglaPartido,
+          siglaUf: dep.siglaUf
+        }));
+        
+        setDeputados(deputadosData);
+        
+      } catch (e: any) {
+        console.error('Erro ao buscar dados dos Deputados:', e);
+        setErrorDeputados('Não foi possível carregar os dados dos Deputados. Tente novamente mais tarde.');
+      } finally {
+        setLoadingDeputados(false);
+      }
+    }
+    getDeputados();
   }, []);
 
   // Filtros mais específicos para separar corretamente os cargos
@@ -206,8 +420,10 @@ export default function DeputadosPage() {
         </div>
       </header>
 
-      <main className="relative z-10 container mx-auto px-6 py-12 text-white">
-         <div className="text-center mb-12">
+      <main className="relative z-10 container mx-auto px-6 py-12 text-white space-y-16">
+        {/* Seção Mesa Diretora */}
+        <section>
+          <div className="text-center mb-12">
             <h1 className="text-4xl font-bold flex items-center justify-center gap-4">
               <Shield size={36} /> Mesa Diretora
             </h1>
@@ -215,55 +431,92 @@ export default function DeputadosPage() {
               A Mesa Diretora é o órgão responsável pela direção dos trabalhos legislativos e dos serviços administrativos da Câmara. 
               Clique nos pontos da linha do tempo para explorar cada categoria.
             </p>
-        </div>
-        
-        {loading && (
-          <div className="flex justify-center items-center h-40">
-            <Loader2 className="h-12 w-12 animate-spin text-blue-300" />
           </div>
-        )}
+          
+          {loading && (
+            <div className="flex justify-center items-center h-40">
+              <Loader2 className="h-12 w-12 animate-spin text-blue-300" />
+            </div>
+          )}
 
-        {error && (
-            <Alert variant="destructive" className="max-w-xl mx-auto bg-red-900/30 border-red-500/50 text-red-200">
-                <AlertTitle>Erro ao carregar dados</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
-        )}
+          {error && (
+              <Alert variant="destructive" className="max-w-xl mx-auto bg-red-900/30 border-red-500/50 text-red-200">
+                  <AlertTitle>Erro ao carregar dados</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+              </Alert>
+          )}
 
-        {!loading && !error && (
-          <div className="space-y-8">
-            {/* Timeline Horizontal */}
-            <Timeline 
-              steps={timelineSteps}
-              activeStep={activeStep}
-              onStepClick={setActiveStep}
-            />
-            
-            {/* Descrição da categoria ativa */}
-            {stepAtivo && (
-              <div className="text-center">
-                <p className="text-gray-300 max-w-2xl mx-auto">
-                  {stepAtivo.description}
-                </p>
-              </div>
-            )}
-            
-            {/* Cards dos membros */}
-            {membrosAtivos.length > 0 ? (
-              <div className="flex flex-wrap justify-center gap-6">
-                {membrosAtivos.map(dep => (
-                  <MemberCard key={dep.id} dep={dep} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-400">
-                  Nenhum membro encontrado para esta categoria.
-                </p>
-              </div>
-            )}
+          {!loading && !error && (
+            <div className="space-y-8">
+              {/* Timeline Horizontal */}
+              <Timeline 
+                steps={timelineSteps}
+                activeStep={activeStep}
+                onStepClick={setActiveStep}
+              />
+              
+              {/* Descrição da categoria ativa */}
+              {stepAtivo && (
+                <div className="text-center">
+                  <p className="text-gray-300 max-w-2xl mx-auto">
+                    {stepAtivo.description}
+                  </p>
+                </div>
+              )}
+              
+              {/* Cards dos membros */}
+              {membrosAtivos.length > 0 ? (
+                <div className="flex flex-wrap justify-center gap-6">
+                  {membrosAtivos.map(dep => (
+                    <MemberCard key={dep.id} dep={dep} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-400">
+                    Nenhum membro encontrado para esta categoria.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* Seção Plenário */}
+        <section>
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold flex items-center justify-center gap-4">
+              🏛️ Plenário da Câmara
+            </h2>
+            <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">
+              Visualização do plenário com todos os 513 deputados organizados por partido. 
+              Passe o mouse sobre as cadeiras para ver a composição partidária.
+            </p>
           </div>
-        )}
+          
+          {loadingDeputados && (
+            <div className="flex justify-center items-center h-40">
+              <Loader2 className="h-12 w-12 animate-spin text-blue-300" />
+            </div>
+          )}
+
+          {errorDeputados && (
+              <Alert variant="destructive" className="max-w-xl mx-auto bg-red-900/30 border-red-500/50 text-red-200">
+                  <AlertTitle>Erro ao carregar dados</AlertTitle>
+                  <AlertDescription>{errorDeputados}</AlertDescription>
+              </Alert>
+          )}
+
+          {!loadingDeputados && !errorDeputados && deputados.length > 0 && (
+            <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-lg p-8">
+              <PlenarioChart
+                deputados={deputados}
+                hoveredPartido={hoveredPartido}
+                setHoveredPartido={setHoveredPartido}
+              />
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );
