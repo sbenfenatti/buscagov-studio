@@ -1,83 +1,140 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const patrimonioData = [
-  { label: 'Sem patrimônio declarado', value: 17, color: 'hsl(260 90% 75%)' },
-  { label: 'Até R$100 mil', value: 31, color: 'hsl(260 90% 80%)' },
-  { label: 'R$100 mil a R$500 mil', value: 101, color: 'hsl(260 90% 85%)' },
-  { label: 'R$500 mil a R$1 milhão', value: 84, color: 'hsl(260 90% 90%)' },
-  { label: 'R$1 milhão a R$2 milhões', value: 99, color: 'hsl(260 95% 92%)' },
-  { label: 'R$2 milhões a R$5 milhões', value: 101, color: 'hsl(260 100% 94%)' },
-  { label: 'Acima de R$5 milhões', value: 80, color: 'hsl(260 100% 96%)' },
-].reverse(); // Reverse to have the wealthiest at the top
+// --- Data Definitions ---
+// We'll use static data for now. Each deputy gets an ID from 1 to 513.
 
-const totalDeputados = patrimonioData.reduce((sum, item) => sum + item.value, 0);
-const maxValue = Math.max(...patrimonioData.map(item => item.value));
+const totalDeputados = 513;
 
-const PatrimonioChart = () => {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+const getDemographicData = () => {
+  const data = [];
+  for (let i = 1; i <= totalDeputados; i++) {
+    // Gênero: 90 mulheres (17.5%), 423 homens
+    const genero = i <= 90 ? 'Feminino' : 'Masculino';
 
-  const chartHeight = 250;
-  const sliceHeight = chartHeight / patrimonioData.length;
+    // Idade: 135 (21-40), 270 (41-60), 108 (61+)
+    let idade;
+    if (i <= 135) idade = '21-40 anos';
+    else if (i <= 135 + 270) idade = '41-60 anos';
+    else idade = '61+ anos';
 
+    // Patrimônio: Reverse order from previous data to match visual
+    let patrimonio;
+    if (i <= 17) patrimonio = 'Sem patrimônio declarado';
+    else if (i <= 17 + 31) patrimonio = 'Até R$100 mil';
+    else if (i <= 17 + 31 + 101) patrimonio = 'R$100 mil a R$500 mil';
+    else if (i <= 17 + 31 + 101 + 84) patrimonio = 'R$500 mil a R$1 milhão';
+    else if (i <= 17 + 31 + 101 + 84 + 99) patrimonio = 'R$1 milhão a R$2 milhões';
+    else if (i <= 17 + 31 + 101 + 84 + 99 + 101) patrimonio = 'R$2 milhões a R$5 milhões';
+    else patrimonio = 'Acima de R$5 milhões';
+    
+    data.push({ id: i, genero, idade, patrimonio });
+  }
+  return data;
+};
+
+
+// --- Color Mappings ---
+const colorConfig = {
+  genero: {
+    'Masculino': 'hsl(210 30% 60%)',
+    'Feminino': 'hsl(330 80% 70%)',
+  },
+  idade: {
+    '21-40 anos': 'hsl(180 70% 60%)',
+    '41-60 anos': 'hsl(195 70% 70%)',
+    '61+ anos': 'hsl(210 70% 80%)',
+  },
+  patrimonio: {
+    'Sem patrimônio declarado': 'hsl(60 5% 50%)',
+    'Até R$100 mil': 'hsl(260 90% 96%)',
+    'R$100 mil a R$500 mil': 'hsl(260 90% 90%)',
+    'R$500 mil a R$1 milhão': 'hsl(260 90% 85%)',
+    'R$1 milhão a R$2 milhões': 'hsl(260 90% 80%)',
+    'R$2 milhões a R$5 milhões': 'hsl(260 90% 75%)',
+    'Acima de R$5 milhões': 'hsl(260 90% 70%)',
+  },
+};
+
+type FilterType = keyof typeof colorConfig;
+
+// --- Waffle Chart Component ---
+const WaffleChart = ({ data, activeFilter }: { data: any[], activeFilter: FilterType }) => {
   return (
-    <div className="relative flex flex-col items-center justify-center h-full w-full">
-      <svg width="100%" height={chartHeight} viewBox={`0 0 100 ${chartHeight}`} preserveAspectRatio="none" className="transform -rotate-90">
-        <g transform="translate(0, 250) scale(1, -1)">
-          {patrimonioData.map((item, index) => {
-            const y = index * sliceHeight;
-            const itemWidth = (item.value / maxValue) * 90; // 90% of width for margin
-            const xOffset = (100 - itemWidth) / 2;
-            const isHovered = hoveredIndex === index;
+    <div className="grid grid-cols-27 grid-rows-19 gap-1.5 w-full max-w-4xl mx-auto">
+      {data.map(deputado => (
+        <Tooltip key={deputado.id} content={`${deputado.id}: ${deputado[activeFilter]}`}>
+          <div
+            className="w-full h-0 pb-[100%] rounded-[2px] transition-colors duration-500"
+            style={{ backgroundColor: colorConfig[activeFilter][deputado[activeFilter]] }}
+          />
+        </Tooltip>
+      ))}
+       {/* Simple grid definition for 27x19 = 513 */}
+      <style jsx>{`
+        .grid-cols-27 {
+          grid-template-columns: repeat(27, minmax(0, 1fr));
+        }
+        .grid-rows-19 {
+          grid-template-rows: repeat(19, minmax(0, 1fr));
+        }
+      `}</style>
+    </div>
+  );
+};
 
-            return (
-              <g
-                key={index}
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
-                className="cursor-pointer"
-              >
-                <path
-                  d={`M ${xOffset},${y + 2} L ${100 - xOffset},${y + 2} L ${100 - xOffset + 5},${y + sliceHeight / 2} L ${100 - xOffset},${y + sliceHeight - 2} L ${xOffset},${y + sliceHeight - 2} L ${xOffset - 5},${y + sliceHeight / 2} Z`}
-                  fill={item.color}
-                  className={cn(
-                    'transition-all duration-300',
-                    isHovered ? 'opacity-100' : 'opacity-70'
-                  )}
-                  style={{ filter: isHovered ? `drop-shadow(0 0 8px ${item.color})` : 'none' }}
-                />
-              </g>
-            );
-          })}
-        </g>
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="text-center text-white">
-            {hoveredIndex !== null ? (
-                <>
-                    <div className="text-3xl font-bold">{patrimonioData[hoveredIndex].value}</div>
-                    <div className="text-sm max-w-40">{patrimonioData[hoveredIndex].label}</div>
-                </>
-            ) : (
-                <>
-                    <div className="text-3xl font-bold">{totalDeputados}</div>
-                    <div className="text-sm">Deputados</div>
-                </>
-            )}
-          </div>
-      </div>
+
+// --- Tooltip for interactivity ---
+const Tooltip = ({ children, content }) => {
+    const [show, setShow] = useState(false);
+    return (
+        <div 
+            className="relative"
+            onMouseEnter={() => setShow(true)}
+            onMouseLeave={() => setShow(false)}
+        >
+            {children}
+            <div className={cn(
+                "absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs rounded py-1 px-2 transition-opacity duration-300 pointer-events-none",
+                show ? "opacity-100" : "opacity-0"
+            )}>
+                {content}
+            </div>
+        </div>
+    );
+}
+
+// --- Legend Component ---
+const Legend = ({ activeFilter }: { activeFilter: FilterType }) => {
+  const items = colorConfig[activeFilter];
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8">
+      {Object.entries(items).map(([key, color]) => (
+        <div key={key} className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
+          <span className="text-xs text-gray-300">{key}</span>
+        </div>
+      ))}
     </div>
   );
 };
 
 
 export default function CamaraPage() {
+  const [activeFilter, setActiveFilter] = useState<FilterType>('genero');
+  const demographicData = useMemo(() => getDemographicData(), []);
+  
+  const filters: { label: string; key: FilterType }[] = [
+    { label: 'Gênero', key: 'genero' },
+    { label: 'Idade', key: 'idade' },
+    { label: 'Patrimônio', key: 'patrimonio' },
+  ];
+
   return (
     <div className="relative w-full min-h-screen overflow-hidden">
       <div className="absolute inset-0 bg-camara-background-image bg-cover bg-center" />
@@ -106,7 +163,6 @@ export default function CamaraPage() {
             <nav className="flex items-center space-x-4">
               <Link href="/camara/deputados">
                 <Button variant="ghost" className="text-white hover:bg-white/10 hover:text-white">
-                  <Users className="mr-2 h-4 w-4" />
                   Deputados
                 </Button>
               </Link>
@@ -117,35 +173,30 @@ export default function CamaraPage() {
       <main className="relative z-10 container mx-auto px-6 py-12 flex flex-col items-center justify-center text-white text-center" style={{ minHeight: 'calc(100vh - 88px)' }}>
         <div className="mb-12">
             <h1 className="text-5xl font-extrabold tracking-tight">Você se sente representado?</h1>
-            <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">Um retrato demográfico da Câmara dos Deputados, mostrando a distribuição de gênero, idade e patrimônio dos 513 parlamentares que decidem o futuro do país.</p>
+            <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">Cada um dos 513 blocos representa uma cadeira na Câmara dos Deputados. Use os filtros para ver a composição demográfica da casa.</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
-            <Card className="bg-white/10 border-white/20 text-white backdrop-blur-sm">
-                <CardHeader>
-                    <CardTitle>Gênero</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p>Visualização de gênero aqui.</p>
-                </CardContent>
-            </Card>
-            <Card className="bg-white/10 border-white/20 text-white backdrop-blur-sm">
-                <CardHeader>
-                    <CardTitle>Idade</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p>Visualização de idade aqui.</p>
-                </CardContent>
-            </Card>
-            <Card className="bg-white/10 border-white/20 text-white backdrop-blur-sm h-[350px]">
-                <CardHeader>
-                    <CardTitle>Patrimônio</CardTitle>
-                </CardHeader>
-                <CardContent className="h-full">
-                    <PatrimonioChart />
-                </CardContent>
-            </Card>
+        <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-lg p-6 w-full max-w-5xl">
+            <div className="flex items-center justify-center gap-4 mb-8">
+                {filters.map(filter => (
+                    <Button
+                        key={filter.key}
+                        variant={activeFilter === filter.key ? 'secondary' : 'ghost'}
+                        className={cn(
+                            'text-white',
+                            activeFilter === filter.key ? 'bg-white/20 hover:bg-white/30' : 'hover:bg-white/10'
+                        )}
+                        onClick={() => setActiveFilter(filter.key)}
+                    >
+                        {filter.label}
+                    </Button>
+                ))}
+            </div>
+            
+            <WaffleChart data={demographicData} activeFilter={activeFilter} />
+            <Legend activeFilter={activeFilter} />
         </div>
+
       </main>
     </div>
   );
