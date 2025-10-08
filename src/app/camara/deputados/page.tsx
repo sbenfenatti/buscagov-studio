@@ -88,7 +88,7 @@ const MemberCard = ({ dep }: { dep: Deputado }) => (
   </div>
 );
 
-// Componente do Chart Semicircular do Plenário - VERSÃO CORRIGIDA E SIMPLIFICADA
+// Componente do Chart Semicircular do Plenário - VERSÃO FINAL CORRIGIDA
 const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
   deputados: DeputadoPlenario[];
   hoveredPartido: string | null;
@@ -108,14 +108,14 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
     return partidosOrdenados;
   }, [deputados]);
 
-  // Distribui deputados em posições semicirculares - GEOMETRIA CORRIGIDA
+  // Distribui deputados em posições semicirculares - GEOMETRIA FINAL CORRIGIDA
   const posicoes = useMemo(() => {
     const totalDeputados = deputados.length;
     const numeroFileiras = 8;
-    const raioBase = 60;
+    const raioBase = 80;
     const espacamentoFileira = 25;
     const centerX = 0;
-    const centerY = -50; // Ajuste para posicionar melhor
+    const centerY = 0; // Centralizado verticalmente
     
     // Semicírculo côncavo VOLTADO PARA CIMA
     const anguloInicio = Math.PI; // 180° - esquerda
@@ -163,7 +163,7 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
         
         // Coordenadas do semicírculo côncavo para CIMA
         const x = centerX + Math.cos(angulo) * raio;
-        const y = centerY + Math.sin(angulo) * raio; // SEM negativo - deixa natural
+        const y = centerY + Math.sin(angulo) * raio; // SEM negativo - mantém natural
         
         // Encontra partido
         let partidoAtual = '';
@@ -196,12 +196,12 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
 
   return (
     <div 
-      className="relative w-full h-80 flex items-center justify-center"
+      className="relative w-full h-[450px] flex items-center justify-center"
       onMouseLeave={() => setHoveredPartido(null)}
     >
-      {/* SVG do semicírculo côncavo */}
+      {/* SVG do semicírculo côncavo - VIEWBOX EXPANDIDO */}
       <svg 
-        viewBox="-300 -120 600 240" 
+        viewBox="-350 -150 700 300" 
         className="w-full h-full"
         preserveAspectRatio="xMidYMid meet"
         aria-label="Plenário da Câmara dos Deputados"
@@ -227,38 +227,61 @@ const PlenarioChart = ({ deputados, hoveredPartido, setHoveredPartido }: {
             />
           );
         })}
-      </svg>
-      
-      {/* Legenda na base */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 pointer-events-none">
-        <div className="text-center bg-black/80 backdrop-blur-lg rounded-xl px-6 py-4 border border-white/20 shadow-2xl">
+        
+        {/* Legenda no canto inferior direito do SVG */}
+        <g>
+          <rect 
+            x="220" 
+            y="100" 
+            width="120" 
+            height="40" 
+            rx="8" 
+            fill="rgba(0,0,0,0.8)" 
+            stroke="rgba(255,255,255,0.2)" 
+            strokeWidth="1"
+          />
           {hoveredPartido && partidoInfo ? (
             <>
-              <div 
-                className="text-3xl font-bold transition-all duration-200"
-                style={{ color: partidoInfo.cor }}
+              <text 
+                x="280" 
+                y="115" 
+                textAnchor="middle" 
+                className="fill-current text-white text-xs font-bold"
+                style={{ fill: partidoInfo.cor }}
               >
                 {hoveredPartido}
-              </div>
-              <div className="text-lg text-white">
+              </text>
+              <text 
+                x="280" 
+                y="128" 
+                textAnchor="middle" 
+                className="fill-white text-xs"
+              >
                 {partidoInfo.quantidade} deputados
-              </div>
-              <div className="text-sm text-gray-300 mt-1">
-                {((partidoInfo.quantidade / totalDeputados) * 100).toFixed(1)}% do plenário
-              </div>
+              </text>
             </>
           ) : (
             <>
-              <div className="text-3xl font-bold text-white">
+              <text 
+                x="280" 
+                y="115" 
+                textAnchor="middle" 
+                className="fill-white text-xs font-bold"
+              >
                 🏛️ {totalDeputados}
-              </div>
-              <div className="text-lg text-gray-200">
+              </text>
+              <text 
+                x="280" 
+                y="128" 
+                textAnchor="middle" 
+                className="fill-gray-300 text-xs"
+              >
                 Deputados Federais
-              </div>
+              </text>
             </>
           )}
-        </div>
-      </div>
+        </g>
+      </svg>
     </div>
   );
 };
@@ -551,7 +574,7 @@ export default function DeputadosPage() {
           )}
 
           {!loadingDeputados && !errorDeputados && deputados.length > 0 && (
-            <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-3xl p-8 max-w-5xl mx-auto">
+            <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-3xl p-12 max-w-6xl mx-auto">
               <PlenarioChart
                 deputados={deputados}
                 hoveredPartido={hoveredPartido}
