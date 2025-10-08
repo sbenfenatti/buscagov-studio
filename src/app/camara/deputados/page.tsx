@@ -1,91 +1,96 @@
 
-'use client';
-
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, Shield, Crown, Group, ClipboardList, Info } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Crown, Group, ClipboardList } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
 
 
-type DeputadoMesa = {
+type Deputado = {
   id: number;
   nome: string;
   siglaPartido: string;
   siglaUf: string;
   urlFoto: string;
-  titulo: string; // O cargo, ex: 'Presidente'
+  titulo: string | null;
+  dataInicio: string;
+  dataFim: string | null;
 };
 
-// Função para retornar dados simulados da Mesa Diretora
-function getMesaDiretoraSimulada(): DeputadoMesa[] {
-    const deputados: Omit<DeputadoMesa, 'id' | 'urlFoto'>[] = [
-        { nome: 'Arthur Lira', siglaPartido: 'PP', siglaUf: 'AL', titulo: 'Presidente' },
-        { nome: 'Marcos Pereira', siglaPartido: 'Republicanos', siglaUf: 'SP', titulo: '1º Vice-Presidente' },
-        { nome: 'Sóstenes Cavalcante', siglaPartido: 'PL', siglaUf: 'RJ', titulo: '2º Vice-Presidente' },
-        { nome: 'Luciano Bivar', siglaPartido: 'União', siglaUf: 'PE', titulo: '1º Secretário' },
-        { nome: 'Maria do Rosário', siglaPartido: 'PT', siglaUf: 'RS', titulo: '2º Secretária' },
-        { nome: 'Júlio Cesar', siglaPartido: 'PSD', siglaUf: 'PI', titulo: '3º Secretário' },
-        { nome: 'Lúcio Mosquini', siglaPartido: 'MDB', siglaUf: 'RO', titulo: '4º Secretário' },
-        { nome: 'Gilberto Nascimento', siglaPartido: 'PSC', siglaUf: 'SP', titulo: '1º Suplente' },
-        { nome: 'Jeferson Rodrigues', siglaPartido: 'Republicanos', siglaUf: 'GO', titulo: '2º Suplente' },
-        { nome: 'Roberto Monteiro', siglaPartido: 'PL', siglaUf: 'RJ', titulo: '3º Suplente' },
-        { nome: 'André Ferreira', siglaPartido: 'PL', siglaUf: 'PE', titulo: '4º Suplente' },
-    ];
-
-    return deputados.map((dep, index) => ({
-        ...dep,
-        id: 204554 + index, // Ids fictícios
-        urlFoto: `https://www.camara.leg.br/internet/deputado/bandep/${204554 + index}.jpg`,
-    }));
+async function getMesaDiretora(): Promise<Deputado[]> {
+  try {
+    const response = await fetch('https://dados.camara.leg.br/api/v2/legislaturas/57/mesa', {
+        next: { revalidate: 3600 } // Revalida a cada hora
+    });
+    if (!response.ok) {
+        throw new Error('Falha ao buscar dados da API');
+    }
+    const data = await response.json();
+    
+    // Filtra para manter apenas os membros atuais (sem data de fim)
+    return data.dados.filter((m: Deputado) => m.dataFim === null);
+  } catch (error) {
+    console.error('Erro ao buscar dados da Mesa Diretora:', error);
+    return []; // Retorna um array vazio em caso de erro
+  }
 }
 
-const MemberCard = ({ dep }: { dep: DeputadoMesa }) => (
-    <Card className="bg-black/40 border-white/20 text-white w-full max-w-xs transform transition-transform hover:scale-105 hover:bg-black/60">
-        <CardContent className="flex flex-col items-center text-center p-6">
-            <Image 
-                src={dep.urlFoto} 
-                alt={`Foto de ${dep.nome}`}
-                width={100}
-                height={100}
-                className="rounded-full border-4 border-white/30 mb-4 shadow-lg"
-            />
-            <h3 className="font-bold text-xl">{dep.nome}</h3>
-            <p className="text-md text-gray-300">{`${dep.siglaPartido}-${dep.siglaUf}`}</p>
-            <Badge variant="secondary" className="mt-3 bg-blue-300/20 text-blue-100 text-sm">{dep.titulo}</Badge>
-        </CardContent>
-    </Card>
+
+const MemberCard = ({ dep }: { dep: Deputado }) => (
+    <div className="bg-black/40 border border-white/20 rounded-lg p-4 flex flex-col items-center text-center transform transition-transform hover:scale-105 hover:bg-black/60">
+        <Image 
+            src={dep.urlFoto} 
+            alt={`Foto de ${dep.nome}`}
+            width={80}
+            height={80}
+            className="rounded-full border-2 border-white/30 mb-3"
+        />
+        <h3 className="font-bold text-md">{dep.nome}</h3>
+        <p className="text-sm text-gray-300">{`${dep.siglaPartido}-${dep.siglaUf}`}</p>
+        <Badge variant="secondary" className="mt-2 text-xs bg-blue-300/10 text-blue-200">{dep.titulo}</Badge>
+    </div>
 );
 
+const GroupAccordionItem = ({ title, icon: Icon, members, description }: { title: string, icon: React.ElementType, members: Deputado[], description: string }) => {
+    if (members.length === 0) return null;
 
-const timelineItemsConfig = [
-    { key: "presidente", title: "Presidência", icon: Crown },
-    { key: "vices", title: "Vice-Presidência", icon: Shield },
-    { key: "secretarios", title: "Secretaria", icon: ClipboardList },
-    { key: "suplentes", title: "Suplência", icon: Group },
-];
+    return (
+        <AccordionItem value={title} className="border-b-0 flex-1 min-w-[240px]">
+            <AccordionTrigger className="bg-black/40 hover:bg-black/60 border border-white/20 rounded-lg p-6 flex flex-col justify-center items-center gap-3 text-white hover:no-underline [&[data-state=open]>div>svg]:text-blue-400">
+                <div className="flex items-center gap-3">
+                    <Icon className="h-8 w-8 text-white transition-colors" />
+                    <h3 className="text-xl font-bold">{title}</h3>
+                </div>
+            </AccordionTrigger>
+            <AccordionContent className="mt-4 text-white p-6 bg-black/30 rounded-lg border border-white/10">
+                <p className="text-gray-300 mb-6 text-center">{description}</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {members.map(dep => <MemberCard key={dep.id} dep={dep} />)}
+                </div>
+            </AccordionContent>
+        </AccordionItem>
+    )
+};
 
-export default function DeputadosPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const mesaDiretora = getMesaDiretoraSimulada();
 
-  const presidente = mesaDiretora.filter(m => m.titulo === 'Presidente');
-  const vices = mesaDiretora.filter(m => m.titulo.includes('Vice-Presidente'));
-  const secretarios = mesaDiretora.filter(m => m.titulo.includes('Secretári'));
-  const suplentes = mesaDiretora.filter(m => m.titulo.includes('Suplente'));
+export default async function DeputadosPage() {
+  const mesaDiretora = await getMesaDiretora();
+
+  const presidente = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Presidente'));
+  const vices = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Vice-Presidente'));
+  const secretarios = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Secretári'));
+  const suplentes = mesaDiretora.filter(m => m.titulo && m.titulo.includes('Suplente'));
+
+  const groups = [
+    { title: "Presidência", icon: Crown, members: presidente, description: "Dirige as sessões da Câmara, representa a instituição e supervisiona todos os trabalhos legislativos e administrativos." },
+    { title: "Vice-Presidência", icon: Shield, members: vices, description: "Substitui o Presidente em suas ausências ou impedimentos, garantindo a continuidade dos trabalhos da Casa." },
+    { title: "Secretaria", icon: ClipboardList, members: secretarios, description: "Responsável pela administração interna, como a ata das sessões, a numeração de projetos e a gestão de documentos." },
+    { title: "Suplência", icon: Group, members: suplentes, description: "Substituem os Secretários em suas ausências, garantindo o quórum e o funcionamento das atividades administrativas." },
+  ]
   
-  const categoryMembers: Record<string, DeputadoMesa[]> = {
-    presidente,
-    vices,
-    secretarios,
-    suplentes,
-  };
-
-  const currentMembers = selectedCategory ? categoryMembers[selectedCategory] : [];
-
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden bg-black">
       <div className="absolute inset-0 bg-camara-background-image bg-cover bg-center opacity-30" />
@@ -125,53 +130,22 @@ export default function DeputadosPage() {
       </header>
 
       <main className="relative z-10 container mx-auto px-6 py-12 text-white">
-         <div className="text-center mb-16">
+         <div className="text-center mb-12">
             <h1 className="text-4xl font-bold flex items-center justify-center gap-4"><Shield size={36} /> Mesa Diretora</h1>
-            <p className="text-lg mt-4 text-gray-300 max-w-2xl mx-auto">A Mesa Diretora é o órgão que dirige os trabalhos da Câmara. Selecione uma categoria para ver seus membros.</p>
+            <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">A Mesa Diretora é o órgão responsável pela direção dos trabalhos legislativos e dos serviços administrativos da Câmara. Clique em um cargo para ver seus membros e atribuições.</p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-8 min-h-[50vh]">
-            {/* Vertical Timeline Navigation */}
-            <div className="relative flex md:flex-col justify-center items-center md:items-start md:w-20">
-                <div className="absolute top-1/2 left-0 w-full h-0.5 bg-white/20 md:top-0 md:left-1/2 md:w-0.5 md:h-full" />
-                
-                {timelineItemsConfig.map((item, index) => {
-                    const isSelected = selectedCategory === item.key;
-                    return (
-                        <div key={item.key} className="relative z-10 flex-1 flex justify-center">
-                            <button 
-                                onClick={() => setSelectedCategory(item.key)}
-                                className={cn(
-                                    "w-12 h-12 rounded-full border-4 flex items-center justify-center transition-all duration-300 transform hover:scale-110",
-                                    isSelected 
-                                      ? "bg-blue-400 text-black border-black/50" 
-                                      : "bg-gray-700 text-gray-300 border-black/50 hover:bg-gray-600"
-                                )}
-                                aria-label={`Ver ${item.title}`}
-                            >
-                               <item.icon className="h-6 w-6" />
-                            </button>
-                        </div>
-                    )
-                })}
-            </div>
-
-            {/* Content Area */}
-            <div className="flex-1 flex items-center justify-center p-4">
-                {currentMembers.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {currentMembers.map(dep => <MemberCard key={dep.id} dep={dep} />)}
-                    </div>
-                ) : (
-                    <div className="text-center text-gray-400 flex flex-col items-center">
-                        <Info className="w-16 h-16 mb-4"/>
-                        <h2 className="text-2xl font-bold">Selecione uma categoria</h2>
-                        <p className="max-w-sm mt-2">Clique em um dos ícones à esquerda para visualizar os membros correspondentes da Mesa Diretora.</p>
-                    </div>
-                )}
-            </div>
-        </div>
-
+        <Accordion type="single" collapsible className="w-full flex flex-col md:flex-row items-start gap-6">
+            {groups.map(group => (
+                <GroupAccordionItem 
+                    key={group.title}
+                    title={group.title}
+                    icon={group.icon}
+                    members={group.members}
+                    description={group.description}
+                />
+            ))}
+        </Accordion>
       </main>
     </div>
   );
