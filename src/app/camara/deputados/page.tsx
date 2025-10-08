@@ -5,7 +5,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, Shield, Crown, User, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Crown, Group, ChevronDown, ClipboardList } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Accordion,
@@ -107,9 +107,9 @@ export default function DeputadosPage() {
   
   const timelineItems = [
     { value: "presidente", title: "Presidência", description: "Comanda", members: presidente, icon: Crown, details: "A Presidência é o cargo máximo da Mesa Diretora, responsável por dirigir as sessões plenárias, manter a ordem, e representar a Câmara dos Deputados perante os outros Poderes e a sociedade." },
-    { value: "vices", title: "Vice-Presidência", description: "Substitui", members: vices, icon: Users, details: "Os Vice-Presidentes substituem o Presidente em suas ausências ou impedimentos, garantindo a continuidade dos trabalhos legislativos e auxiliando na gestão da Casa." },
-    { value: "secretarios", title: "Secretaria", description: "Administra", members: secretarios, icon: User, details: "A Secretaria é responsável por funções administrativas cruciais, como a leitura de documentos em plenário, o controle da lista de presença, a apuração de votos e a supervisão da redação das atas." },
-    { value: "suplentes", title: "Suplência", description: "Cobre ausências", members: suplentes, icon: Users, details: "Os Suplentes de Secretários são convocados para substituir os secretários titulares em suas ausências, garantindo que as funções administrativas da Mesa Diretora nunca fiquem vagas." },
+    { value: "vices", title: "Vice-Presidência", description: "Substitui", members: vices, icon: Shield, details: "Os Vice-Presidentes substituem o Presidente em suas ausências ou impedimentos, garantindo a continuidade dos trabalhos legislativos e auxiliando na gestão da Casa." },
+    { value: "secretarios", title: "Secretaria", description: "Administra", members: secretarios, icon: ClipboardList, details: "A Secretaria é responsável por funções administrativas cruciais, como a leitura de documentos em plenário, o controle da lista de presença, a apuração de votos e a supervisão da redação das atas." },
+    { value: "suplentes", title: "Suplência", description: "Cobre ausências", members: suplentes, icon: Group, details: "Os Suplentes de Secretários são convocados para substituir os secretários titulares em suas ausências, garantindo que as funções administrativas da Mesa Diretora nunca fiquem vagas." },
   ];
 
 
@@ -177,5 +177,3 @@ export default function DeputadosPage() {
     </div>
   );
 }
-
-    
