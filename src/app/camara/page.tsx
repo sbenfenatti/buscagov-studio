@@ -24,21 +24,21 @@ const getDemographicData = () => {
 
     // Patrimônio Simplificado: 17 (sem), 31 (até 100k), 101 (100k-500k), 183 (500k-2M), 80 (>5M), (101 de 2-5M ignorados por enquanto)
     let patrimonio;
-    if (i <= 80) patrimonio = 'Acima de R$5 milhões';
+     if (i <= 80) patrimonio = 'Acima de R$5 milhões';
     else if (i <= 80 + 183) patrimonio = 'R$500 mil a R$2 milhões';
     else if (i <= 80 + 183 + 101) patrimonio = 'R$100 mil a R$500 mil';
     else if (i <= 80 + 183 + 101 + 31) patrimonio = 'Até R$100 mil';
-    else patrimonio = 'Sem patrimônio';
+    else patrimonio = 'Sem patrimônio declarado';
 
 
     // Raça/Cor: 370 Brancos, 107 Pardos, 27 Pretos, 5 Indígenas, 3 Amarelos, 1 Não Informado
     let raca;
-    if (i <= 370) raca = 'Branca';
-    else if (i <= 370 + 107) raca = 'Parda';
-    else if (i <= 370 + 107 + 27) raca = 'Preta';
-    else if (i <= 370 + 107 + 27 + 5) raca = 'Indígena';
-    else if (i <= 370 + 107 + 27 + 5 + 3) raca = 'Amarela';
-    else raca = 'Não Informado';
+    if (i <= 27) raca = 'Preta';
+    else if (i <= 27 + 5) raca = 'Indígena';
+    else if (i <= 27 + 5 + 3) raca = 'Amarela';
+    else if (i <= 27 + 5 + 3 + 1) raca = 'Não Informado';
+    else if (i <= 27 + 5 + 3 + 1 + 107) raca = 'Parda';
+    else raca = 'Branca';
 
     // Escolaridade: 421 Superior, 79 Médio, 13 Pós
     let escolaridade;
@@ -74,31 +74,31 @@ const colorConfig = {
     '21-40 anos': 'hsl(170 80% 45%)',
   },
   patrimonio: {
-    'Acima de R$5 milhões': 'hsl(360 90% 55%)',
-    'R$500 mil a R$2 milhões': 'hsl(30 80% 60%)',
-    'R$100 mil a R$500 mil': 'hsl(90 70% 60%)',
-    'Até R$100 mil': 'hsl(120 60% 75%)',
-    'Sem patrimônio': 'hsl(0 0% 70%)',
+    'Acima de R$5 milhões': 'hsl(120 80% 40%)',
+    'R$500 mil a R$2 milhões': 'hsl(100 60% 50%)',
+    'R$100 mil a R$500 mil': 'hsl(80 60% 60%)',
+    'Até R$100 mil': 'hsl(60 70% 70%)',
+    'Sem patrimônio declarado': 'hsl(0 0% 80%)',
   },
   raca: {
-    'Branca': 'hsl(35 60% 80%)',
+    'Branca': 'hsl(35 100% 90%)',
     'Parda': 'hsl(30 40% 50%)',
     'Preta': 'hsl(0 0% 20%)',
-    'Indígena': 'hsl(10 70% 50%)',
     'Amarela': 'hsl(60 100% 70%)',
+    'Indígena': 'hsl(10 70% 50%)',
     'Não Informado': 'hsl(210 10% 85%)',
   },
   escolaridade: {
-    'Pós-graduação': 'hsl(310 70% 55%)',
+    'Pós-graduação': 'hsl(310 80% 50%)',
     'Superior Completo': 'hsl(260 70% 65%)',
-    'Ensino Médio': 'hsl(210 70% 70%)',
+    'Ensino Médio': 'hsl(210 60% 75%)',
   },
   mandatos: {
-    '5 ou mais': 'hsl(100 90% 20%)',
-    '4º Mandato': 'hsl(120 70% 30%)',
-    '3º Mandato': 'hsl(140 50% 45%)',
-    '2º Mandato': 'hsl(160 60% 60%)',
-    '1º Mandato': 'hsl(180 80% 80%)',
+    '5 ou mais': 'hsl(360 90% 45%)',
+    '4º Mandato': 'hsl(25 85% 55%)',
+    '3º Mandato': 'hsl(50 90% 60%)',
+    '2º Mandato': 'hsl(180 60% 60%)',
+    '1º Mandato': 'hsl(200 80% 80%)',
   }
 };
 
@@ -106,17 +106,40 @@ type FilterType = keyof typeof colorConfig;
 
 
 // --- Waffle Chart Component ---
-const WaffleChart = ({ data, activeFilter }: { data: any[], activeFilter: FilterType }) => {
+const WaffleChart = ({ data, activeFilter, hoveredCategory, setHoveredCategory }: { data: any[], activeFilter: FilterType, hoveredCategory: string | null, setHoveredCategory: (category: string | null) => void }) => {
   return (
-    <div className="grid grid-cols-27 grid-rows-19 gap-1.5 w-full max-w-4xl mx-auto">
-      {data.map(deputado => (
-        <Tooltip key={deputado.id} content={`${deputado.id}: ${deputado[activeFilter]}`}>
-          <div
-            className="w-full h-0 pb-[100%] rounded-[2px] transition-colors duration-500"
-            style={{ backgroundColor: colorConfig[activeFilter][deputado[activeFilter]] }}
-          />
-        </Tooltip>
-      ))}
+    <div 
+        className="relative"
+        onMouseLeave={() => setHoveredCategory(null)}
+    >
+        <div className="grid grid-cols-27 grid-rows-19 gap-1.5 w-full max-w-4xl mx-auto">
+            {data.map(deputado => {
+                const category = deputado[activeFilter];
+                const color = colorConfig[activeFilter][category];
+                const isHovered = hoveredCategory === category;
+                const isAnotherHovered = hoveredCategory !== null && !isHovered;
+
+                return (
+                    <div
+                        key={deputado.id}
+                        onMouseEnter={() => setHoveredCategory(category)}
+                        className={cn(
+                            "w-full h-0 pb-[100%] rounded-[2px] transition-all duration-200",
+                            isAnotherHovered ? "opacity-20" : "opacity-100",
+                            isHovered ? "transform scale-110" : "transform scale-100"
+                        )}
+                        style={{ backgroundColor: color }}
+                    />
+                )
+            })}
+        </div>
+        {hoveredCategory && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="bg-black/70 text-white text-2xl sm:text-3xl md:text-4xl font-bold p-4 md:p-6 rounded-lg text-center shadow-lg">
+                    {hoveredCategory}
+                </div>
+            </div>
+        )}
       <style jsx>{`
         .grid-cols-27 {
           grid-template-columns: repeat(27, minmax(0, 1fr));
@@ -130,32 +153,17 @@ const WaffleChart = ({ data, activeFilter }: { data: any[], activeFilter: Filter
 };
 
 
-// --- Tooltip for interactivity ---
-const Tooltip = ({ children, content }) => {
-    const [show, setShow] = useState(false);
-    return (
-        <div
-            className="relative"
-            onMouseEnter={() => setShow(true)}
-            onMouseLeave={() => setShow(false)}
-        >
-            {children}
-            <div className={cn(
-                "absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs rounded py-1 px-2 transition-opacity duration-300 pointer-events-none z-30",
-                show ? "opacity-100" : "opacity-0"
-            )}>
-                {content}
-            </div>
-        </div>
-    );
-}
-
 // --- Legend Component ---
 const Legend = ({ activeFilter }: { activeFilter: FilterType }) => {
   const items = colorConfig[activeFilter];
+  const orderedItems = Object.entries(items).sort(([keyA], [keyB]) => {
+      const order = Object.keys(items);
+      return order.indexOf(keyA) - order.indexOf(keyB);
+  });
+
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-8">
-      {Object.entries(items).map(([key, color]) => (
+      {orderedItems.map(([key, color]) => (
         <div key={key} className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
           <span className="text-xs text-gray-300">{key}</span>
@@ -168,6 +176,7 @@ const Legend = ({ activeFilter }: { activeFilter: FilterType }) => {
 
 export default function CamaraPage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('genero');
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const demographicData = useMemo(() => getDemographicData(), []);
 
   const filters: { label: string; key: FilterType }[] = [
@@ -237,7 +246,12 @@ export default function CamaraPage() {
                 ))}
             </div>
 
-            <WaffleChart data={demographicData} activeFilter={activeFilter} />
+            <WaffleChart 
+                data={demographicData} 
+                activeFilter={activeFilter} 
+                hoveredCategory={hoveredCategory}
+                setHoveredCategory={setHoveredCategory}
+            />
             <Legend activeFilter={activeFilter} />
         </div>
 
@@ -245,3 +259,5 @@ export default function CamaraPage() {
     </div>
   );
 }
+
+    
