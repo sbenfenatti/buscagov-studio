@@ -13,10 +13,31 @@ import { Switch } from '@/components/ui/switch';
 const totalDeputados = 513;
 
 const getDemographicData = (source: 'camara' | 'brasil') => {
-  const data = [];
-  const total = source === 'camara' ? 513 : 100; // Use 100 for percentage representation of Brazil
+  if (source === 'brasil') {
+    // For Brasil, we just need a representative 100-item array for percentage-based logic
+    const brasilData: any[] = [];
+    const brasilCounts = {
+        genero: { 'Deputadas': 51, 'Deputados': 49 },
+        idade: { '61-87 anos': 15, '41-60 anos': 26, '21-40 anos': 30, 'Outras faixas': 29 },
+        raca: { 'Branca': 43, 'Parda': 45, 'Preta': 10, 'Amarela': 1, 'Indígena': 1 },
+        escolaridade: { 'Superior Completo ou mais': 22, 'Ensino Médio': 50, 'Fundamental ou menos': 28 },
+    };
+    for (const key in brasilCounts) {
+        let currentCount = 0;
+        for (const category in brasilCounts[key as keyof typeof brasilCounts]) {
+            for (let i = 0; i < brasilCounts[key as keyof typeof brasilCounts][category]; i++) {
+                if (!brasilData[currentCount]) brasilData[currentCount] = { id: currentCount };
+                brasilData[currentCount][key] = category;
+                currentCount++;
+            }
+        }
+    }
+    return brasilData;
+  }
+  
+  // For Câmara, generate 513 deputies with specific distributions
+  const data = Array.from({ length: totalDeputados }, (_, i) => ({ id: i }));
 
-  // Câmara Data
   const camaraCounts = {
     genero: { 'Deputadas': 90, 'Deputados': 423 },
     idade: { '61-87 anos': 108, '41-60 anos': 270, '21-40 anos': 135 },
@@ -26,70 +47,25 @@ const getDemographicData = (source: 'camara' | 'brasil') => {
     mandatos: { '5 ou mais': 55, '4º Mandato': 42, '3º Mandato': 70, '2º Mandato': 118, '1º Mandato': 228 },
   };
 
-  // Brasil Data (Percentages from IBGE/PNAD as of ~2022)
-  const brasilCounts = {
-    genero: { 'Deputadas': 51, 'Deputados': 49 }, // Mulheres/Homens
-    idade: { '61-87 anos': 15, '41-60 anos': 26, '21-40 anos': 30 }, // Pop. 20+
-    raca: { 'Branca': 43, 'Parda': 45, 'Preta': 10, 'Amarela': 1, 'Indígena': 1, 'Não Informado': 0 },
-    escolaridade: { 'Pós-graduação': 4, 'Superior Completo': 18, 'Ensino Médio': 50 }, // Pop. 25+
-    // Patrimonio and Mandatos are not applicable for the general population
-    patrimonio: {},
-    mandatos: {},
+  // Shuffle array function
+  const shuffle = (array: any[]) => {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
   };
 
-  const sourceCounts = source === 'camara' ? camaraCounts : brasilCounts;
-  
-  let distributedData: any = {};
-  for (const key in sourceCounts) {
-      distributedData[key] = Object.entries(sourceCounts[key as keyof typeof sourceCounts]).flatMap(([category, count]) => Array(count).fill(category));
-  }
-
-  const loopTotal = source === 'camara' ? totalDeputados : 100;
-  for (let i = 0; i < loopTotal; i++) {
-    const entry: any = { id: i };
-    for (const key in sourceCounts) {
-        const categoryArray = distributedData[key];
-        entry[key] = categoryArray[i % categoryArray.length];
-    }
-    data.push(entry);
-  }
-
-  // Fill remaining data points for Camara to ensure correct distribution
-  if (source === 'camara') {
-    let currentCounts = { ...camaraCounts };
-    let filledCounts: any = {};
-    for (const key in camaraCounts) {
-        filledCounts[key] = {};
-    }
-
-    // Initialize filled counts
-    data.forEach(item => {
-        for (const key in camaraCounts) {
-            const category = item[key];
-            if(category) {
-               filledCounts[key][category] = (filledCounts[key][category] || 0) + 1;
-            }
+  // Assign categories to the 513 deputies
+  for (const key in camaraCounts) {
+    const categoryKey = key as keyof typeof camaraCounts;
+    const distribution = Object.entries(camaraCounts[categoryKey]).flatMap(([category, count]) => Array(count).fill(category));
+    shuffle(distribution);
+    for (let i = 0; i < totalDeputados; i++) {
+        if (distribution[i]) {
+            data[i][categoryKey] = distribution[i];
         }
-    });
-
-    for (let i = 0; i < data.length; i++) {
-       for (const key in camaraCounts) {
-            const currentCategory = data[i][key];
-            // If there's an excess for the current category, try to swap it
-            if (filledCounts[key][currentCategory] > currentCounts[key as keyof typeof currentCounts][currentCategory]) {
-                for (const targetCategory in currentCounts[key as keyof typeof currentCounts]) {
-                    if (filledCounts[key][targetCategory] < currentCounts[key as keyof typeof currentCounts][targetCategory]) {
-                        data[i][key] = targetCategory;
-                        filledCounts[key][currentCategory]--;
-                        filledCounts[key][targetCategory]++;
-                        break;
-                    }
-                }
-            }
-       }
     }
   }
-
 
   return data;
 };
@@ -139,25 +115,19 @@ type FilterType = keyof typeof config;
 
 
 // --- Waffle Chart Component ---
-const WaffleChart = ({ data, activeFilter, hoveredCategory, setHoveredCategory, source, className }: { data: any[], activeFilter: FilterType, hoveredCategory: string | null, setHoveredCategory: (category: string | null) => void, source: 'camara' | 'brasil', className?: string }) => {
+const WaffleChart = ({ data, activeFilter, hoveredCategory, setHoveredCategory, className }: { data: any[], activeFilter: FilterType, hoveredCategory: string | null, setHoveredCategory: (category: string | null) => void, className?: string }) => {
   const HoverIcon = hoveredCategory ? config[activeFilter][hoveredCategory]?.icon : null;
-  const count = hoveredCategory ? (source === 'camara' ? config[activeFilter][hoveredCategory]?.camaraCount : config[activeFilter][hoveredCategory]?.brasilCount) : 0;
-  const unit = source === 'camara' ? (count === 1 ? 'deputado' : 'deputados') : '%';
+  const camaraCount = hoveredCategory ? config[activeFilter][hoveredCategory]?.camaraCount : 0;
     
-  const totalItems = source === 'camara' ? 33 * 16 : 10 * 10;
-  const gridCols = source === 'camara' ? 'grid-cols-33' : 'grid-cols-10';
-  const dataToRender = source === 'camara' ? data : Array.from({ length: 100 }, (_, i) => data[i] || { id: `placeholder-${i}`, placeholder: true });
-
-
   return (
     <div 
         className={cn("relative", className)}
         onMouseLeave={() => setHoveredCategory(null)}
     >
-        <div className={`grid ${gridCols} gap-1.5 w-full mx-auto`}>
-            {dataToRender.map((item, index) => {
-                if (!item || item.id > (source === 'camara' ? 513 : 100)) {
-                    return <div key={item?.id || `placeholder-${index}`} className="w-full h-0 pb-[100%] opacity-0" />;
+        <div className="grid grid-cols-33 gap-1.5 w-full mx-auto">
+            {data.map(item => {
+                if (!item || item.id >= 513) {
+                    return <div key={item.id} className="w-full h-0 pb-[100%] opacity-0" />;
                 }
 
                 const category = item[activeFilter];
@@ -185,13 +155,12 @@ const WaffleChart = ({ data, activeFilter, hoveredCategory, setHoveredCategory, 
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="bg-black/70 text-white text-2xl sm:text-3xl md:text-4xl font-bold p-4 md:p-6 rounded-lg text-center shadow-lg flex items-center gap-4">
                     {HoverIcon && <HoverIcon className="h-8 w-8 sm:h-10 sm:w-10" />}
-                    <span>{hoveredCategory} ({count}{unit})</span>
+                    <span>{hoveredCategory} ({camaraCount} deputados)</span>
                 </div>
             </div>
         )}
       <style jsx>{`
         .grid-cols-33 { grid-template-columns: repeat(33, minmax(0, 1fr)); }
-        .grid-cols-10 { grid-template-columns: repeat(10, minmax(0, 1fr)); }
       `}</style>
     </div>
   );
@@ -226,8 +195,7 @@ export default function CamaraPage() {
   const [compare, setCompare] = useState(false);
 
   const camaraData = useMemo(() => getDemographicData('camara'), []);
-  const brasilData = useMemo(() => getDemographicData('brasil'), []);
-
+  
   const filters: { label: string; key: FilterType }[] = [
     { label: 'Gênero', key: 'genero' },
     { label: 'Idade', key: 'idade' },
@@ -273,7 +241,8 @@ export default function CamaraPage() {
             </div>
             <nav className="flex items-center space-x-4">
               <Link href="/camara/deputados">
-                <Button variant="ghost" className="text-white hover:bg-white/10 hover:text-white">
+                <Button variant="secondary" className="text-white bg-white/20 hover:bg-white/30">
+                  <Users className="mr-2 h-4 w-4" />
                   Deputados
                 </Button>
               </Link>
@@ -284,7 +253,7 @@ export default function CamaraPage() {
       <main className="relative z-10 container mx-auto px-6 py-12 flex flex-col items-center text-white text-center">
         <div className="mb-12">
             <h1 className="text-5xl font-extrabold tracking-tight">Você se sente representado?</h1>
-            <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">Cada bloco representa uma cadeira na Câmara ou um percentual da população. Use os filtros para comparar a demografia.</p>
+            <p className="text-lg mt-4 text-gray-300 max-w-3xl mx-auto">Cada bloco representa uma cadeira na Câmara. Use os filtros para explorar a demografia dos deputados e compare com os dados da população brasileira.</p>
         </div>
 
         <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-lg p-6 w-full">
@@ -308,33 +277,13 @@ export default function CamaraPage() {
                 </div>
             </div>
 
-            <div className={cn("grid grid-cols-1 gap-12 w-full", compare && "lg:grid-cols-2")}>
-                <div className="flex flex-col items-center">
-                    <h2 className="text-2xl font-bold mb-4">Câmara dos Deputados</h2>
-                    <WaffleChart 
-                        data={camaraData} 
-                        activeFilter={activeFilter} 
-                        hoveredCategory={hoveredCategory}
-                        setHoveredCategory={setHoveredCategory}
-                        source="camara"
-                        className="w-full max-w-2xl"
-                    />
-                </div>
-
-                {compare && (
-                    <div className="flex flex-col items-center">
-                        <h2 className="text-2xl font-bold mb-4">População Brasileira (%)</h2>
-                        <WaffleChart 
-                            data={brasilData} 
-                            activeFilter={activeFilter} 
-                            hoveredCategory={hoveredCategory}
-                            setHoveredCategory={setHoveredCategory}
-                            source="brasil"
-                            className="w-full max-w-sm"
-                        />
-                    </div>
-                )}
-            </div>
+            <WaffleChart 
+                data={camaraData} 
+                activeFilter={activeFilter} 
+                hoveredCategory={hoveredCategory}
+                setHoveredCategory={setHoveredCategory}
+                className="w-full max-w-4xl"
+            />
 
             <Legend activeFilter={activeFilter} compare={compare}/>
         </div>
@@ -343,5 +292,3 @@ export default function CamaraPage() {
     </div>
   );
 }
-
-    
