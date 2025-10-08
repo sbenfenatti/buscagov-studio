@@ -29,7 +29,9 @@ async function getMesaDiretora() {
     }
     const data = await response.json();
 
-    const deputadosOrdenados = data.dados.sort((a: DeputadoMesa, b: DeputadoMesa) => {
+    const mesaAtual = data.dados.filter((membro: DeputadoMesa) => membro.dataFim === null);
+
+    const deputadosOrdenados = mesaAtual.sort((a: DeputadoMesa, b: DeputadoMesa) => {
         const ordem = [
             'Presidente', '1º Vice-Presidente', '2º Vice-Presidente',
             '1º Secretário', '2º Secretário', '3º Secretário', '4º Secretário',
