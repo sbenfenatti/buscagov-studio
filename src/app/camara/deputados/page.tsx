@@ -1,11 +1,18 @@
 
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Users, Shield, Crown } from 'lucide-react';
+import { ArrowLeft, Users, Shield, Crown, User, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 type DeputadoMesa = {
   id: number;
@@ -54,22 +61,26 @@ const MemberInfo = ({ dep }: { dep: DeputadoMesa }) => (
     </div>
 );
 
-const GroupCard = ({ title, members, icon: Icon }: { title: string, members: DeputadoMesa[], icon: React.ElementType }) => {
+const GroupAccordionItem = ({ value, title, description, members, icon: Icon }: { value: string, title: string, description: string, members: DeputadoMesa[], icon: React.ElementType }) => {
     if (!members || members.length === 0) return null;
     return (
-        <Card className="bg-black/30 backdrop-blur-md border-white/20 text-white w-full">
-            <CardHeader>
-                <CardTitle className="flex items-center justify-center gap-3 text-2xl">
-                    <Icon className="text-blue-300" />
-                    {title}
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="flex flex-wrap justify-center gap-x-6 gap-y-4">
+        <AccordionItem value={value} className="bg-black/30 backdrop-blur-md border-white/20 text-white rounded-lg px-6 mb-4">
+            <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-4">
+                    <Icon className="text-blue-300 h-8 w-8" />
+                    <div>
+                        <h3 className="text-xl font-bold text-left">{title}</h3>
+                        <p className="text-sm text-gray-300 text-left">{description}</p>
+                    </div>
+                </div>
+                 <ChevronDown className="h-6 w-6 shrink-0 transition-transform duration-200 text-blue-300" />
+            </AccordionTrigger>
+            <AccordionContent>
+                <div className="flex flex-wrap justify-center gap-x-6 gap-y-4 pt-4 border-t border-white/20">
                     {members.map(dep => <MemberInfo key={dep.id} dep={dep} />)}
                 </div>
-            </CardContent>
-        </Card>
+            </AccordionContent>
+        </AccordionItem>
     )
 };
 
@@ -123,16 +134,40 @@ export default function DeputadosPage() {
       <main className="relative z-10 container mx-auto px-6 py-12 text-white">
         <div className="text-center mb-12">
             <h1 className="text-4xl font-bold flex items-center justify-center gap-4"><Shield size={36} /> Mesa Diretora</h1>
-            <p className="text-lg mt-4 text-gray-300 max-w-2xl mx-auto">A Mesa Diretora é responsável pela direção dos trabalhos legislativos e dos serviços administrativos da Câmara.</p>
+            <p className="text-lg mt-4 text-gray-300 max-w-2xl mx-auto">A Mesa Diretora é responsável pela direção dos trabalhos legislativos e dos serviços administrativos da Câmara. Clique em cada cargo para ver os membros.</p>
         </div>
 
         {mesaDiretora.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-               <GroupCard title="Presidente" members={presidente} icon={Crown} />
-               <GroupCard title="Vice-Presidentes" members={vices} icon={Users} />
-               <GroupCard title="Secretários" members={secretarios} icon={Users} />
-               <GroupCard title="Suplentes" members={suplentes} icon={Users} />
-            </div>
+            <Accordion type="single" collapsible className="w-full max-w-4xl mx-auto">
+                <GroupAccordionItem 
+                    value="presidente"
+                    title="Presidência"
+                    description="Representa a Câmara e comanda as sessões."
+                    members={presidente}
+                    icon={Crown}
+                />
+                <GroupAccordionItem 
+                    value="vices"
+                    title="Vice-Presidência"
+                    description="Substituem o presidente em suas ausências."
+                    members={vices}
+                    icon={Users}
+                />
+                <GroupAccordionItem 
+                    value="secretarios"
+                    title="Secretaria"
+                    description="Controlam a ata e a frequência dos deputados."
+                    members={secretarios}
+                    icon={User}
+                />
+                <GroupAccordionItem 
+                    value="suplentes"
+                    title="Suplência"
+                    description="Substituem os secretários em suas ausências."
+                    members={suplentes}
+                    icon={Users}
+                />
+            </Accordion>
         ) : (
             <div className="text-center text-gray-400">
                 <p>Não foi possível carregar os dados da Mesa Diretora. Tente novamente mais tarde.</p>
