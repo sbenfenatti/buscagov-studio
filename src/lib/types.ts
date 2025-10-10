@@ -1,13 +1,11 @@
-import { ComponentType } from 'react';
+// Simplified types for server-side usage
 
 export interface Parameter {
   name: string;
   type: 'query' | 'path' | 'header';
   description: string;
   required?: boolean;
-  autocomplete?: string;
   enum?: string[];
-  default?: string | number;
 }
 
 export interface Endpoint {
@@ -15,38 +13,21 @@ export interface Endpoint {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   path: string;
   description: string;
-  longDescription?: string;
   parameters?: Parameter[];
-  requestBody?: any;
-  responses?: any;
 }
 
 export interface Category {
   name: string;
-  icon: ComponentType;
   endpoints: Endpoint[];
 }
 
 export interface ApiSource {
   name: string;
   baseUrl: string;
-  icon: ComponentType;
   categories: Category[];
 }
 
-// Response types for API calls
-export interface APIResponse {
-  dados: any[];
-  links?: {
-    self: string;
-    first?: string;
-    last?: string;
-    prev?: string;
-    next?: string;
-  }[];
-}
-
-// Search request/response types
+// Search types
 export interface SearchRequest {
   query: string;
 }
